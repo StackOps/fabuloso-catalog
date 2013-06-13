@@ -362,7 +362,8 @@ def configure_ovs_plugin_gre(mysql_username='quantum',
 
 def configure_ovs_plugin_vlan(iface_bridge='eth1', br_postfix='eth1',
                               vlan_start='2',
-                              vlan_end='4094', mysql_quantum_username='quantum',
+                              vlan_end='4094',
+                              mysql_quantum_username='quantum',
                               mysql_quantum_password='stackops',
                               mysql_host='127.0.0.1',
                               mysql_port='3306', mysql_schema='quantum'):
