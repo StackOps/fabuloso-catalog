@@ -21,6 +21,8 @@ QUANTUM_API_PASTE_CONF = '/etc/quantum/api-paste.ini'
 
 OVS_PLUGIN_CONF = '/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini'
 
+QUANTUM_CONF = '/etc/quantum/quantum.conf'
+
 
 def quantum_server_stop():
     with settings(warn_only=True):
@@ -73,6 +75,11 @@ def set_config_file(user, password, auth_host,
                      auth_port, section='filter:authtoken')
     utils.set_option(QUANTUM_API_PASTE_CONF, 'auth_protocol',
                      auth_protocol, section='filter:authtoken')
+    utils.set_option(QUANTUM_CONF, 'notification_driver',
+                     'quantum.openstack.common.notifier.rabbit_notifier')
+    utils.set_option(QUANTUM_CONF, 'notification_topics',
+                     'notifications,monitor')
+    utils.set_option(QUANTUM_CONF, 'default_notification_level', 'INFO')
 
 
 def configure_ovs_plugin_vlan(vlan_start='1', vlan_end='4094',
@@ -80,7 +87,6 @@ def configure_ovs_plugin_vlan(vlan_start='1', vlan_end='4094',
                               mysql_password='stackops',
                               mysql_host='127.0.0.1',
                               mysql_port='3306', mysql_schema='quantum'):
-
     utils.set_option(OVS_PLUGIN_CONF, 'sql_connection',
                      utils.sql_connect_string(mysql_host, mysql_password,
                                               mysql_port, mysql_schema,
