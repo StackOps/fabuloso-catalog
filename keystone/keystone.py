@@ -164,10 +164,16 @@ def configure_users(endpoint, admin_token, admin_pass, tenant_name):
                                         'ROLE_HEAD_ADMIN')
     admin_user = _create_user(endpoint, admin_token, 'admin', admin_pass,
                               admin_tenant)
+    head_user = _create_user(endpoint, admin_token, 'head', admin_pass,
+                             head_tenant)
     _link_user_role(endpoint, admin_token, admin_user, keystone_admin_role,
                     admin_tenant)
+    _link_user_role(endpoint, admin_token, head_user, keystone_admin_role,
+                    head_tenant)
     _link_user_role(endpoint, admin_token, admin_user,
                     keystone_service_admin_role, admin_tenant)
+    _link_user_role(endpoint, admin_token, head_user,
+                    keystone_service_admin_role, head_tenant)
     _link_user_role(endpoint, admin_token, admin_user, admin_role,
                     admin_tenant)
     _link_user_role(endpoint, admin_token, admin_user, member_role,
@@ -176,6 +182,10 @@ def configure_users(endpoint, admin_token, admin_pass, tenant_name):
                     admin_tenant)
     _link_user_role(endpoint, admin_token, admin_user, portal_user_role,
                     admin_tenant)
+    _link_user_role(endpoint, admin_token, head_user, portal_admin_role,
+                    head_tenant)
+    _link_user_role(endpoint, admin_token, head_user, portal_user_role,
+                    head_tenant)
     _link_user_role(endpoint, admin_token, admin_user, activity_admin_role,
                     admin_tenant)
     _link_user_role(endpoint, admin_token, admin_user, activity_user_role,
