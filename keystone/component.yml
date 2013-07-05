@@ -3,15 +3,12 @@ file: keystone.py
 description: Operations over OpenStack Keystone module
 
 Services:
-    - name: install_and_configure
+    - name: install
       description:  Install OpenStack Keystone from ubuntu packages
       methods:
           - install
           - set_config_file
           - configure_users
-    - name: register_services_and_endpoints
-      description: Prepare the basic Admin user and the StackOps roles
-      methods: 
           - define_keystone_service
           - define_nova_service
           - define_ec2_service

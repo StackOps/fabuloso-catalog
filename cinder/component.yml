@@ -3,7 +3,7 @@ file: cinder.py
 description: OpenStack Cinder Component
 
 Services:
-    - name: install_and_configure
+    - name: install
       description: Install cinder and configure it
       methods:
           - install

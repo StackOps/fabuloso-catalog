@@ -3,7 +3,7 @@ file: glance.py
 description: Operations over OpenStack Glance module
 
 Services:
-    - name: install_and_configure
+    - name: install
       description:  Install OpenStack Glance from ubuntu packages
       methods:
           - install

@@ -3,7 +3,7 @@ file: compute.py
 description: Operations over Node Compute component
 
 Services:
-    - name: install_and_configure
+    - name: install
       description: Install and configure component file
       methods:
           - install

@@ -9,7 +9,7 @@ Services:
           - nameservers
           - block_devices
           - mounts
-    - name: setup_node
+    - name: install
       description: Prepares remote system for a OS with StackOps deployment
       methods:
           - add_repos

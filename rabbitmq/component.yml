@@ -7,7 +7,7 @@ Services:
       description: Starts the service
       methods:
           - start
-    - name: configure
+    - name: install
       description: Installs and configure the service
       methods:
           - configure
