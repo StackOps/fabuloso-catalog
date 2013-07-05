@@ -3,7 +3,7 @@ file: quantum_plugins.py
 description: Operations over Quantum Plugins
 
 Services:
-    - name: install_and_configure
+    - name: install
       description: Install and configure the quantum plugin
       methods:
           - compile_datapath

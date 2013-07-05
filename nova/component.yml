@@ -3,7 +3,7 @@ file: nova.py
 description: Operations over OpenStack Nova service
      
 Services:
-    - name: install_and_configure
+    - name: install
       description: Install OpenStack Nova from ubuntu packages
       methods:
           - install

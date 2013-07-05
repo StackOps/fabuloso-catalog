@@ -3,7 +3,7 @@ file: quantum.py
 description: Operations over Quantum
 
 Services:
-    - name: install_and_configure
+    - name: install
       description: Install quantum server and configure it
       methods:
           - install
