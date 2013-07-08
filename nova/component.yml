@@ -16,3 +16,9 @@ Services:
       description: Start Nova Service
       methods:
           - start
+    - name: validate
+      description: Validates nova to operate with it
+      methods:
+          - validate_database
+          - validate_credentials
+          - validate_rabbitmq

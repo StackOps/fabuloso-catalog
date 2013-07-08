@@ -14,6 +14,7 @@
 #   limitations under the License.from fabric.api import *
 from fabric.api import sudo, settings
 from cuisine import package_ensure
+from fabuloso import fabuloso
 
 
 def stop():
@@ -41,3 +42,10 @@ def configure(cluster=False, password='guest'):
         sudo('chmod -R og=rxw /var/lib/rabbitmq')
         sudo('chown -R rabbitmq:rabbitmq /var/lib/rabbitmq')
         sudo('chmod 700 /var/lib/rabbitmq/.erlang.cookie')
+
+
+def validate_rabbitmq(service_type, host, rport=None, ruser=None,
+                      rpassword=None, virtual_host=None):
+    fab = fabuloso.Fabuloso()
+    fab.send_rabbitMQ(service_type, host, rport, ruser, rpassword,
+                      virtual_host)

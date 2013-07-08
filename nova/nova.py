@@ -14,6 +14,7 @@
 #   limitations under the License.from fabric.api import *
 from fabric.api import settings, sudo, put, get, local, puts
 from cuisine import package_clean, package_ensure
+from fabuloso import fabuloso
 
 
 import uuid
@@ -285,3 +286,22 @@ def get_properties():
 
 def delete_property(name):
     sudo('sed -i "/^%s=/d" %s' % (name, CONFIG_FILE))
+
+
+def validate_database(database_type, username, password, host, port,
+                      schema, drop_schema=None, install_database=None):
+    fab = fabuloso.Fabuloso()
+    fab.validate_database(database_type, username, password, host, port,
+                          schema, drop_schema, install_database)
+
+
+def validate_credentials(user, password, tenant, endpoint, admin_token):
+    fab = fabuloso.Fabuloso()
+    fab.validate_credentials(user, password, tenant, endpoint, admin_token)
+
+
+def validate_rabbitmq(service_type, host, rport=None, ruser=None,
+                      rpassword=None, virtual_host=None):
+    fab = fabuloso.Fabuloso()
+    fab.send_rabbitMQ(service_type, host, rport, ruser, rpassword,
+                      virtual_host)
