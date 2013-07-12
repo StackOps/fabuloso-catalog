@@ -1,0 +1,71 @@
+name: swift
+file: swift.py
+description: OpenStack Object Storage service (Swift)
+
+Services:
+    - name: install_proxy
+      description: Installs an OpenStack's Swift proxy node
+      methods:
+        - install_common_packages
+        - install_config
+        - install_proxy
+        - install_proxy_config
+        - install_proxy_cert
+        - install_keystone_signing_dir
+
+        - build_rings
+        - deploy_rings
+
+        - post_install_config
+
+    - name: start_proxy
+      description: Starts an OpenStack's Swift proxy node services
+      methods:
+        - start_proxy
+
+    - name: install_storage
+      description: Installs an OpenStack's Swift storage node
+      methods:
+        - install_common_packages
+        - install_config
+        - install_storage
+        - install_storage_config
+        - install_storage_devices
+        - install_rsync
+
+        - post_install_config
+
+    - name: start_storage
+      description: Starts an OpenStack's Swift storage node services
+      methods:
+        - start_storage
+
+    - name: test_proxy
+      description: Tests an OpenStack's Swift proxy node installation
+      methods:
+        - test_config
+        - test_proxy_cert
+        - test_proxy_config
+        - test_keystone_signing_dir
+
+        - test_built_rings
+        - test_deployed_rings
+
+    - name: test_start_proxy
+      description: Tests that OpenStack's Swift proxy node services are running
+      methods:
+        - test_start_proxy
+
+    - name: test_storage
+      description: Tests an OpenStack's Swift storage node installation
+      methods:
+        - test_config
+        - test_storage
+        - test_storage_config
+        - test_storage_devices
+        - test_rsync
+
+    - name: test_start_storage
+      description: Tests that OpenStack's Swift storage node services are running
+      methods:
+        - test_start_storage

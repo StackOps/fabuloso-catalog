@@ -27,3 +27,8 @@ Services:
       description: Register the automation service and the endpoint
       methods:
           - define_automation_service
+
+    - name: register_swift
+      description: Register the OpenStack's Swift service and endpoint
+      methods:
+        - define_swift_service

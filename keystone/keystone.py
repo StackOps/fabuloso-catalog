@@ -309,6 +309,19 @@ def define_automation_service(admin_token, region, endpoint,
                              automation_password, 'service')
 
 
+def define_swift_service(admin_token, region, endpoint,
+                         swift_public_url, swift_internal_url,
+                         swift_admin_url, swift_user, swift_password):
+
+    _create_service(
+        admin_token, 'swift', 'object-store',
+        'OpenStack Object-Store service', region, endpoint,
+        swift_public_url, swift_internal_url, swift_admin_url)
+
+    _create_user_for_service(endpoint, swift_user, admin_token,
+                             swift_password, 'service')
+
+
 def configure_services(admin_token="password", public_ip='127.0.0.1',
                        public_port='80', internal_ip='127.0.0.1',
                        region='RegionOne'):
