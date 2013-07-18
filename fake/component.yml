@@ -1,0 +1,21 @@
+name: fake
+file: fake.py
+description: Fake Component
+
+Services:
+    - name: fake_install
+      description: Install and configure component file
+      methods:
+          - install
+    - name: fake_setup
+      description: setups the fake
+      methods:
+          - setup
+    - name: fake_tear_down
+      description: tears down the fake
+      methods: 
+          - tear_down
+    - name: verify
+      description: verify the fake
+      methods:
+          - verify
