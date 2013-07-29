@@ -14,6 +14,7 @@
 #   limitations under the License.from fabric.api import *
 from fabric.api import sudo, settings, put, cd, local, puts
 from cuisine import package_ensure, package_clean
+from fabuloso import fabuloso
 
 GLANCE_IMAGES = '/var/lib/glance/images'
 
@@ -156,3 +157,15 @@ def publish_ttylinux(auth_uri,
                 kernel_id[2].strip(), image_name))
         sudo('rm -fR images')
         sudo('rm -f %s.tar.gz' % image_name)
+
+
+def validate_database(database_type, username, password, host, port,
+                      schema, drop_schema=None, install_database=None):
+    fab = fabuloso.Fabuloso()
+    fab.validate_database(database_type, username, password, host, port,
+                          schema, drop_schema, install_database)
+
+
+def validate_credentials(user, password, tenant, endpoint, admin_token):
+    fab = fabuloso.Fabuloso()
+    fab.validate_credentials(user, password, tenant, endpoint, admin_token)

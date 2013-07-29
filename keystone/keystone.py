@@ -12,9 +12,12 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.from fabric.api import *
+import MySQLdb
 
 from fabric.api import settings, sudo, put, local, puts
 from cuisine import package_ensure, package_clean
+from fabuloso import fabuloso
+from keystoneclient.v2_0 import client
 
 
 def stop():
@@ -361,3 +364,908 @@ def configure_services(admin_token="password", public_ip='127.0.0.1',
                     'http://%s:%s/network' % (public_ip, public_port),
                     'http://%s:9696' % internal_ip,
                     'http://%s:9696' % internal_ip)
+
+
+def validate_requirements(admin_token, auth_protocol, auth_host, auth_port,
+                          auth_version, admin_tenant, automation_tenant,
+                          admin_user, automation_user, portal_user,
+                          activity_user, admin_role, keystone_admin_role,
+                          keystone_service_admin_role, member_role,
+                          activity_user_role, accounting_role,
+                          portal_admin_role, chargeback_user_role,
+                          portal_user_role, activity_admin_role,
+                          head_admin_role, chargeback_admin_role,
+                          service_type, auth_context=None):
+    try:
+        admin_token = str(admin_token)
+        if auth_context is None:
+            endpoint = '%s://%s:%s/%s' % (auth_protocol, auth_host, auth_port,
+                                          auth_version)
+        else:
+            endpoint = '%s://%s:%s/%s/%s' % (auth_protocol, auth_host,
+                                             auth_port, auth_context,
+                                             auth_version)
+
+        keystone = client.Client(token=admin_token, endpoint=endpoint)
+
+        #Getting tenant list
+        tenant_list = 0
+        admin_tenant_id = 0
+        automation_tenant_id = 0
+        tenants_on_keystone = keystone.tenants.list()
+        if tenants_on_keystone is not None:
+            if len(tenants_on_keystone) > 0:
+                for tenant in tenants_on_keystone:
+                    if tenant.name == admin_tenant:
+                        tenant_list += 1
+                        admin_tenant_id = tenant.id
+                    if tenant.name == automation_tenant:
+                        tenant_list += 1
+                        automation_tenant_id = tenant.id
+
+        #logging.debug(tenant_list)
+        if tenant_list < 2:
+            #logging.error('Keystone has not the minimum tenants to operate..
+            # .Please check....')
+            raise Exception('Keystone has not the minimum tenants to operate'
+                            '...Please check....')
+
+        #Gettting user-list to validate 'admin','automation', 'activity'
+        #and 'portal' users as minimum
+        user_list = 0
+        admin_user_id = 0
+        automation_user_id = 0
+        portal_user_id = 0
+        activity_user_id = 0
+        users_on_keystone = keystone.users.list()
+        if users_on_keystone is not None:
+            if len(users_on_keystone) > 0:
+                for user in users_on_keystone:
+                    if user.name == str(admin_user):
+                        user_list += 1
+                        admin_user_id = user.id
+                    if user.name == str(automation_user):
+                        user_list += 1
+                        automation_user_id = user.id
+                    if user.name == str(portal_user):
+                        user_list += 1
+                        portal_user_id = user.id
+                    if user.name == str(activity_user):
+                        user_list += 1
+                        activity_user_id = user.id
+
+        #logging.debug(user_list)
+        if user_list < 4:
+            #logging.error('Keystone has the minimum tenants but it has not
+            # the minimum users to operate...Please check....')
+            raise Exception('Keystone has the minimum tenants but it has not '
+                            'the minimum users to operate...Please check....')
+
+        #Gettting role-list to validate 'admin','KeystoneAdmin',
+        #'KeystoneServiceAdmin','Member', 'ROLE_ACTIVITY_USER,
+        #'ROLE_ACCOUNTING','ROLE_PORTAL_ADMIN','ROLE_CHARGEBACK_USER',
+        #'ROLE_PORTAL_USER', 'ROLE_ACTIVITY_ADMIN', 'ROLE_HEAD_ADMIN'
+        #'ROLE_CHARGEBACK_ADMIN' roles as minimum
+        sum_roles = 0
+        roles_on_keystone = keystone.roles.list()
+        if roles_on_keystone is not None:
+            if len(roles_on_keystone) > 0:
+                for rol in roles_on_keystone:
+                    if rol.name in (admin_role, keystone_admin_role,
+                                    keystone_service_admin_role, member_role,
+                                    activity_user_role, accounting_role,
+                                    portal_admin_role, chargeback_user_role,
+                                    portal_user_role, activity_admin_role,
+                                    head_admin_role, chargeback_admin_role):
+                        if rol.name == admin_role:
+                            sum_roles += 1
+                        if rol.name == keystone_admin_role:
+                            sum_roles += 1
+                        if rol.name == keystone_service_admin_role:
+                            sum_roles += 1
+                        if rol.name == member_role:
+                            sum_roles += 1
+                        if rol.name == activity_user_role:
+                            sum_roles += 1
+                        if rol.name == accounting_role:
+                            sum_roles += 1
+                        if rol.name == portal_admin_role:
+                            sum_roles += 1
+                        if rol.name == chargeback_user_role:
+                            sum_roles += 1
+                        if rol.name == portal_user_role:
+                            sum_roles += 1
+                        if rol.name == activity_admin_role:
+                            sum_roles += 1
+                        if rol.name == head_admin_role:
+                            sum_roles += 1
+                        if rol.name == chargeback_admin_role:
+                            sum_roles += 1
+
+        #logging.debug(sum_roles)
+        if sum_roles < 12:
+            #logging.error('Keystone has the minimum users and tenants but it
+            # has not the minimum roles to operate'...Please check....')
+            raise Exception('Keystone has the minimum users and tenants but '
+                            'it has not the minimum roles to operate...'
+                            'Please check....')
+
+        if tenant_list == 2 and user_list == 4 and sum_roles == 12:
+            #logging.debug("The users 'admin' and 'automation' ,
+            # the roles 'admin', 'KeystoneAdmin', 'KeystoneServiceAdmin
+            # and 'Member', and tenants 'admin' and 'service' exists
+            # in Keystone. Prepare to verify dependencies between them.....")
+
+            #Getting roles by user on a tenant
+            #Roles on admin tenant with admin user
+            complete_verification = 0
+            roles_by_user_on_tenant = keystone.roles.\
+                roles_for_user(tenant=admin_tenant_id,
+                               user=admin_user_id)
+
+            if roles_by_user_on_tenant is not None:
+                if len(roles_by_user_on_tenant) > 0:
+                    for rol in roles_by_user_on_tenant:
+                        if rol.name in (admin_role, keystone_admin_role,
+                                        keystone_service_admin_role,
+                                        member_role):
+                            if rol.name == admin_role:
+                                complete_verification += 1
+
+                            if rol.name == keystone_admin_role:
+                                complete_verification += 1
+
+                            if rol.name == keystone_service_admin_role:
+                                complete_verification += 1
+
+                            if rol.name == member_role:
+                                complete_verification += 1
+
+            #Roles on service tenant with automation user
+            rol_by_user_automation_on_tenant = keystone.roles.\
+                roles_for_user(tenant=automation_tenant_id,
+                               user=automation_user_id)
+
+            if rol_by_user_automation_on_tenant is not None:
+                if len(rol_by_user_automation_on_tenant) > 0:
+                    for rol in rol_by_user_automation_on_tenant:
+                        if rol.name in admin_role:
+                            if rol.name == admin_role:
+                                complete_verification += 1
+
+            #Roles on service tenant with portal user
+            rol_by_user_portal_on_tenant = keystone.roles.\
+                roles_for_user(tenant=automation_tenant_id,
+                               user=portal_user_id)
+
+            if rol_by_user_portal_on_tenant is not None:
+                if len(rol_by_user_portal_on_tenant) > 0:
+                    for rol in rol_by_user_portal_on_tenant:
+                        if rol.name in admin_role:
+                            if rol.name == admin_role:
+                                complete_verification += 1
+
+            #Roles on service tenant with activity user
+            rol_by_user_activity_on_tenant = keystone.roles.\
+                roles_for_user(tenant=automation_tenant_id,
+                               user=activity_user_id)
+
+            if rol_by_user_activity_on_tenant is not None:
+                if len(rol_by_user_activity_on_tenant) > 0:
+                    for rol in rol_by_user_activity_on_tenant:
+                        if rol.name in admin_role:
+                            if rol.name == admin_role:
+                                complete_verification += 1
+
+        #logging.debug(complete_verification)
+        if complete_verification < 7:
+            #logging.error('Keystone has the minimum requirements to operate
+            # (tenants, users and roles) but it has not relationships between
+            # them... Please check....')
+            raise Exception('Keystone has the minimum requirements to operate '
+                            '(tenants, users and roles) but it has not '
+                            'relationships between them...Please check....')
+
+        #Getting service-list
+        service_list = 0
+        services = keystone.services.list()
+        if services is not None:
+            if len(services) > 0:
+                for service in services:
+                    if service.type == service_type:
+                        service_id = service.id
+                        service_list = 1
+
+        #logging.debug(service_list)
+        if service_list < 1:
+            #logging.error('Keystone has the minimum requirements to operate
+            # (users, roles, tenants and relationships) but it has not the
+            # minimum service identity...Please check....')
+            raise Exception('Keystone has the minimum requirements to operate '
+                            '(users, roles, tenants and relationships but it '
+                            'has not the minimum service Identity'
+                            '...Please check....')
+
+        #Getting endpoint of the identity service
+        endpoint_list = 0
+        endpoints = keystone.endpoints.list()
+        if endpoints is not None:
+            if len(endpoints) > 0:
+                for endpoint in endpoints:
+                    if endpoint.service_id == service_id:
+                        endpoint_list = 1
+
+        #logging.debug(endpoint_list)
+        if endpoint_list < 1:
+            #logging.error('Keystone has the minimum requirements to operate '
+            #              '(users, roles, tenants and relationships, also the'
+            #              ' Identity Service but has not the endpoint'
+            #              '...Please check....')
+            raise Exception('Keystone has the minimum requirements to operate '
+                            '(users, roles, tenants and relationships, also '
+                            'the Identity Service, but it has not the '
+                            'endpoint of the identity service created...'
+                            'Please check....')
+
+        print 'Validation of keystone finished successfully...'
+    except Exception, e:
+        import traceback
+        print traceback.format_exc()
+        #logging.error(traceback.format_exc())
+        #logging.error("Error at the moment to Create %s tenant. %s" %
+        # (tenant, e))
+        raise Exception('Error at the moment to validate Keystone Service. '
+                        'Please check log... %s' % e)
+
+
+def repair_requirements(admin_token, auth_protocol, auth_host, auth_port,
+                        auth_version, public_port, services_port, auth_region,
+                        admin_tenant, automation_tenant,
+                        admin_tenant_description,
+                        automation_tenant_description,
+                        admin_user, automation_user, portal_user,
+                        activity_user, admin_user_password,
+                        automation_user_password, portal_user_password,
+                        activity_user_password, admin_user_email,
+                        automation_user_email, portal_user_email,
+                        activity_user_email, admin_role, keystone_admin_role,
+                        keystone_service_admin_role, member_role,
+                        activity_user_role, accounting_role,
+                        portal_admin_role, chargeback_user_role,
+                        portal_user_role, activity_admin_role,
+                        head_admin_role, chargeback_admin_role, service_name,
+                        service_type, service_description, auth_context=None):
+    try:
+        fix = True
+        admin_token = admin_token
+        if auth_context is None:
+            endpoint = '%s://%s:%s/%s' % (auth_protocol, auth_host, auth_port,
+                                          auth_version)
+        else:
+            endpoint = '%s://%s:%s/%s/%s' % (auth_protocol, auth_host,
+                                             auth_port, auth_context,
+                                             auth_version)
+
+        keystone = client.Client(token=admin_token, endpoint=endpoint)
+
+        #Getting tenant list
+        tenant_list = 0
+        admin_tenant_id = 0
+        automation_tenant_id = 0
+        tenants_on_keystone = keystone.tenants.list()
+        if tenants_on_keystone is not None:
+            if len(tenants_on_keystone) > 0:
+                for tenant in tenants_on_keystone:
+                    if tenant.name == admin_tenant:
+                        tenant_list += 1
+                        admin_tenant_id = tenant.id
+                    if tenant.name == automation_tenant:
+                        tenant_list += 1
+                        automation_tenant_id = tenant.id
+
+            if tenant_list < 2 and fix:
+                if admin_tenant_id == 0:
+                    tenantAdmin = keystone.tenants.\
+                        create(tenant_name=admin_tenant,
+                               description=admin_tenant_description,
+                               enabled=True)
+                    if tenantAdmin is not None:
+                        admin_tenant_id = tenantAdmin.id
+                        tenant_list += 1
+
+                if automation_tenant_id == 0:
+                    tenantHead = keystone.tenants.\
+                        create(tenant_name=automation_tenant,
+                               description=automation_tenant_description,
+                               enabled=True)
+                    if tenantHead is not None:
+                        automation_tenant_id = tenantHead.id
+                        tenant_list += 1
+        #logging.debug(tenant_list)
+        if tenant_list < 2:
+            #logging.error('Keystone has not the minimum tenants to operate...
+            # Please check....')
+            raise Exception('Keystone has not the minimum tenants to operate'
+                            '...Please check....')
+
+        #Gettting user-list to validate 'admin' and 'automation'
+        # users as minimum
+        user_list = 0
+        admin_user_id = 0
+        automation_user_id = 0
+        portal_user_id = 0
+        activity_user_id = 0
+        users_on_keystone = keystone.users.list()
+        if users_on_keystone is not None:
+            if len(users_on_keystone) > 0:
+                for user in users_on_keystone:
+                    if user.name == str(admin_user):
+                        user_list += 1
+                        admin_user_id = user.id
+                    if user.name == str(automation_user):
+                        user_list += 1
+                        automation_user_id = user.id
+                    if user.name == str(portal_user):
+                        user_list += 1
+                        portal_user_id = user.id
+                    if user.name == str(activity_user):
+                        user_list += 1
+                        activity_user_id = user.id
+
+            if user_list < 4 and fix:
+                if admin_user_id == 0:
+                    userAdmin = keystone.users.\
+                        create(name=admin_user,
+                               password=admin_user_password,
+                               email=admin_user_email,
+                               tenant_id=admin_tenant_id)
+                    if userAdmin is not None:
+                        admin_user_id = userAdmin.id
+                        user_list += 1
+                if automation_user_id == 0:
+                    userAutomation = keystone.users.\
+                        create(name=automation_user,
+                               password=automation_user_password,
+                               email=automation_user_email,
+                               tenant_id=automation_tenant_id)
+                    if userAutomation is not None:
+                        automation_user_id = userAutomation.id
+                        user_list += 1
+                if portal_user_id == 0:
+                    userPortal = keystone.users.\
+                        create(name=portal_user,
+                               password=portal_user_password,
+                               email=portal_user_email,
+                               tenant_id=automation_tenant_id)
+                    if userPortal is not None:
+                        portal_user_id = userPortal.id
+                        user_list += 1
+                if activity_user_id == 0:
+                    userActivity = keystone.users.\
+                        create(name=activity_user,
+                               password=activity_user_password,
+                               email=activity_user_email,
+                               tenant_id=automation_tenant_id)
+                    if userActivity is not None:
+                        activity_user_id = userActivity.id
+                        user_list += 1
+        #logging.debug(user_list)
+        if user_list < 4:
+            #logging.error('Keystone has the minimum tenants but it
+            # has not the minimum users to operate...'
+            #              'Please check....')
+            raise Exception('Keystone has the minimum tenants but it '
+                            'has not the minimum users to operate...'
+                            'Please check....')
+
+        #Gettting role-list to validate 'admin','KeystoneAdmin',
+        # 'KeystoneServiceAdmin', 'Member', 'ROLE_ACTIVITY_USER,
+        #'ROLE_ACCOUNTING','ROLE_PORTAL_ADMIN','ROLE_CHARGEBACK_USER',
+        #'ROLE_PORTAL_USER', 'ROLE_ACTIVITY_ADMIN', 'ROLE_HEAD_ADMIN'
+        #'ROLE_CHARGEBACK_ADMIN' roles as minimum
+        sum_roles = 0
+        _admin_role = False
+        _keystone_admin_role = False
+        _keystone_service_admin_role = False
+        _member_role = False
+        _activity_user_role = False
+        _accounting_role = False
+        _portal_admin_role = False
+        _chargeback_user_role = False
+        _portal_user_role = False
+        _activity_admin_role = False
+        _head_admin_role = False
+        _chargeback_admin_role = False
+
+        admin_rol_id = 0
+        keystone_admin_role_id = 0
+        member_role_id = 0
+        keystone_service_admin_role_id = 0
+        activity_user_rol_id = 0
+        accounting_rol_id = 0
+        portal_admin_rol_id = 0
+        chargeback_user_rol_id = 0
+        portal_user_rol_id = 0
+        activity_admin_rol_id = 0
+        head_admin_rol_id = 0
+        chargeback_admin_rol_id = 0
+
+        roles_on_keystone = keystone.roles.list()
+        if roles_on_keystone is not None:
+            if len(roles_on_keystone) > 0:
+                for rol in roles_on_keystone:
+                    if rol.name in (admin_role, keystone_admin_role,
+                                    keystone_service_admin_role, member_role,
+                                    activity_user_role, accounting_role,
+                                    portal_admin_role,
+                                    chargeback_user_role,
+                                    portal_user_role, activity_admin_role,
+                                    head_admin_role, chargeback_admin_role):
+                        if rol.name == admin_role:
+                            _admin_role = True
+                            admin_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == keystone_admin_role:
+                            _keystone_admin_role = True
+                            keystone_admin_role_id = rol.id
+                            sum_roles += 1
+                        if rol.name == keystone_service_admin_role:
+                            _keystone_service_admin_role = True
+                            keystone_service_admin_role_id = rol.id
+                            sum_roles += 1
+                        if rol.name == member_role:
+                            _member_role = True
+                            member_role_id = rol.id
+                            sum_roles += 1
+                        if rol.name == activity_user_role:
+                            _activity_user_role = True
+                            activity_user_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == accounting_role:
+                            _accounting_role = True
+                            accounting_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == portal_admin_role:
+                            _portal_admin_role = True
+                            portal_admin_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == chargeback_user_role:
+                            _chargeback_user_role = True
+                            chargeback_user_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == portal_user_role:
+                            _portal_user_role = True
+                            portal_user_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == activity_admin_role:
+                            _activity_admin_role = True
+                            activity_admin_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == head_admin_role:
+                            _head_admin_role = True
+                            head_admin_rol_id = rol.id
+                            sum_roles += 1
+                        if rol.name == chargeback_admin_role:
+                            _chargeback_admin_role = True
+                            chargeback_admin_rol_id = rol.id
+                            sum_roles += 1
+
+            if fix:
+                if not _admin_role:
+                    adminRole = keystone.roles.create(name=admin_role)
+                    if adminRole is not None:
+                        admin_rol_id = adminRole.id
+                        sum_roles += 1
+                if not _keystone_admin_role:
+                    keystoneAdminRole = keystone.roles.\
+                        create(name=keystone_admin_role)
+                    if keystoneAdminRole is not None:
+                        keystone_admin_role_id = keystoneAdminRole.id
+                        sum_roles += 1
+                if not _keystone_service_admin_role:
+                    keystoneServiceAdminRole = keystone.roles.\
+                        create(name=keystone_service_admin_role)
+                    if keystoneServiceAdminRole is not None:
+                        keystone_service_admin_role_id = \
+                            keystoneServiceAdminRole.id
+                        sum_roles += 1
+                if not _member_role:
+                    memberRole = keystone.roles.create(name=member_role)
+                    if memberRole is not None:
+                        member_role_id = memberRole.id
+                        sum_roles += 1
+                if not _activity_user_role:
+                    activityUserRole = keystone.roles.create(
+                        name=activity_user_role)
+                    if activityUserRole is not None:
+                        activity_user_rol_id = activityUserRole.id
+                        sum_roles += 1
+                if not _accounting_role:
+                    accountingRole = keystone.roles.create(
+                        name=accounting_role)
+                    if accountingRole is not None:
+                        accounting_rol_id = accountingRole.id
+                        sum_roles += 1
+                if not _portal_admin_role:
+                    portalAdminRole = keystone.roles.create(
+                        name=portal_admin_role)
+                    if portalAdminRole is not None:
+                        portal_admin_rol_id = portalAdminRole.id
+                        sum_roles += 1
+                if not _chargeback_user_role:
+                    chargebackUserRole = keystone.roles.create(
+                        name=chargeback_user_role)
+                    if chargebackUserRole is not None:
+                        chargeback_user_rol_id = chargebackUserRole.id
+                        sum_roles += 1
+                if not _portal_user_role:
+                    portalUserRole = keystone.roles.create(
+                        name=portal_user_role)
+                    if portalUserRole is not None:
+                        portal_user_rol_id = portalUserRole.id
+                        sum_roles += 1
+                if not _activity_admin_role:
+                    activityAdminRole = keystone.roles.create(
+                        name=activity_admin_role)
+                    if activityAdminRole is not None:
+                        activity_admin_rol_id = activityAdminRole.id
+                        sum_roles += 1
+                if not _head_admin_role:
+                    headAdminRole = keystone.roles.create(
+                        name=head_admin_role)
+                    if headAdminRole is not None:
+                        head_admin_rol_id = headAdminRole.id
+                        sum_roles += 1
+                if not _chargeback_admin_role:
+                    chargebackAdminRole = keystone.roles.create(
+                        name=chargeback_admin_role)
+                    if chargebackAdminRole is not None:
+                        chargeback_admin_rol_id = chargebackAdminRole.id
+                        sum_roles += 1
+
+        #logging.debug(sum_roles)
+        if sum_roles < 12:
+            #logging.error('Keystone has the minimum users and tenants but it
+            # has not the minimum roles to operate...Please check....')
+            raise Exception('Keystone has the minimum users and tenants but '
+                            'it has not the minimum roles to operate...'
+                            'Please check....')
+
+        if tenant_list == 2 and user_list == 4 and sum_roles == 12:
+            #logging.debug("The users 'admin' and 'head/automation' , the roles
+            # 'admin', 'KeystoneAdmin', 'KeystoneServiceAdmin and 'Member', and
+            # tenants 'admin' and 'service' exists in Keystone. Prepare to
+            # verify dependencies between them.....")
+
+            #Getting roles by user on a tenant
+            complete_verification = 0
+
+            #Roles on admin tenant with admin user
+            _admin_role_on_tenant = False
+            _keystone_admin_role_on_tenant = False
+            _keystone_service_admin_role_on_tenant = False
+            _member_role_on_tenant = False
+
+            roles_by_user_on_tenant = keystone.roles.roles_for_user(
+                tenant=admin_tenant_id, user=admin_user_id)
+            if roles_by_user_on_tenant is not None:
+                if len(roles_by_user_on_tenant) > 0:
+                    for rol in roles_by_user_on_tenant:
+                        if rol.name in (admin_role,
+                                        keystone_admin_role,
+                                        keystone_service_admin_role,
+                                        member_role):
+                            if rol.name == admin_role:
+                                _admin_role_on_tenant = True
+                                complete_verification += 1
+
+                            if rol.name == keystone_admin_role:
+                                _keystone_admin_role_on_tenant = True
+                                complete_verification += 1
+
+                            if rol.name == keystone_service_admin_role:
+                                _keystone_service_admin_role_on_tenant = True
+                                complete_verification += 1
+
+                            if rol.name == member_role:
+                                _member_role_on_tenant = True
+                                complete_verification += 1
+
+                if fix:
+                    if not _admin_role_on_tenant:
+                        adminRoleOnTenant = keystone.roles.\
+                            add_user_role(user=admin_user_id,
+                                          role=admin_rol_id,
+                                          tenant=admin_tenant_id)
+                        if adminRoleOnTenant is not None:
+                            complete_verification += 1
+
+                    if not _keystone_admin_role_on_tenant:
+                        keystoneAdminRoleOnTenant = keystone.roles.\
+                            add_user_role(user=admin_user_id,
+                                          role=keystone_admin_role_id,
+                                          tenant=admin_tenant_id)
+                        if keystoneAdminRoleOnTenant is not None:
+                            complete_verification += 1
+
+                    if not _keystone_service_admin_role_on_tenant:
+                        keystoneServiceAdminRoleOnTenant = keystone.roles.\
+                            add_user_role(user=admin_user_id,
+                                          role=
+                                          keystone_service_admin_role_id,
+                                          tenant=admin_tenant_id)
+                        if keystoneServiceAdminRoleOnTenant is not None:
+                            complete_verification += 1
+
+                    if not _member_role_on_tenant:
+                        memberRoleOnTenant = keystone.roles.\
+                            add_user_role(user=admin_user_id,
+                                          role=member_role_id,
+                                          tenant=admin_tenant_id)
+                        if memberRoleOnTenant is not None:
+                            complete_verification += 1
+
+            #Roles on service tenant with automation user
+            _admin_role_on_tenant = False
+            rol_by_user_automation_on_tenant = keystone.roles.roles_for_user(
+                tenant=automation_tenant_id, user=automation_user_id)
+            if rol_by_user_automation_on_tenant is not None:
+                if len(rol_by_user_automation_on_tenant) > 0:
+                    for rol in rol_by_user_automation_on_tenant:
+                        if rol.name in admin_role:
+                            if rol.name == admin_role:
+                                _admin_role_on_tenant = True
+                                complete_verification += 1
+
+                if fix:
+                    if not _admin_role_on_tenant:
+                        adminRoleOnTenant = keystone.roles.\
+                            add_user_role(user=automation_user_id,
+                                          role=admin_rol_id,
+                                          tenant=automation_tenant_id)
+                        if adminRoleOnTenant is not None:
+                            complete_verification += 1
+
+            #Roles on service tenant with portal user
+            _admin_role_on_tenant = False
+            rol_by_user_portal_on_tenant = keystone.roles.\
+                roles_for_user(tenant=automation_tenant_id,
+                               user=portal_user_id)
+
+            if rol_by_user_portal_on_tenant is not None:
+                if len(rol_by_user_portal_on_tenant) > 0:
+                    for rol in rol_by_user_portal_on_tenant:
+                        if rol.name in admin_role:
+                            if rol.name == admin_role:
+                                _admin_role_on_tenant = True
+                                complete_verification += 1
+
+                if fix:
+                    if not _admin_role_on_tenant:
+                        adminRoleOnTenant = keystone.roles.\
+                            add_user_role(user=portal_user_id,
+                                          role=admin_rol_id,
+                                          tenant=automation_tenant_id)
+                        if adminRoleOnTenant is not None:
+                            complete_verification += 1
+
+            #Roles on service tenant with activity user
+            _admin_role_on_tenant = False
+            rol_by_user_activity_on_tenant = keystone.roles.\
+                roles_for_user(tenant=automation_tenant_id,
+                               user=activity_user_id)
+
+            if rol_by_user_activity_on_tenant is not None:
+                if len(rol_by_user_activity_on_tenant) > 0:
+                    for rol in rol_by_user_activity_on_tenant:
+                        if rol.name in admin_role:
+                            if rol.name == admin_role:
+                                _admin_role_on_tenant = True
+                                complete_verification += 1
+
+                if fix:
+                    if not _admin_role_on_tenant:
+                        adminRoleOnTenant = keystone.roles.\
+                            add_user_role(user=activity_user_id,
+                                          role=admin_rol_id,
+                                          tenant=automation_tenant_id)
+                        if adminRoleOnTenant is not None:
+                            complete_verification += 1
+
+        #logging.debug(complete_verification)
+        if complete_verification < 7:
+            #logging.error('Keystone has the minimum requirements to operate
+            # (tenants, users and roles) but it has not relationships between
+            # them...Please check....')
+            raise Exception('Keystone has the minimum requirements to operate '
+                            '(tenants, users and roles) but it has not '
+                            'relationships between them...Please check....')
+
+        #Getting service-list
+        service_list = 0
+        endpoint_list = 0
+        service_id = 0
+        services = keystone.services.list()
+        if services is not None:
+            if len(services) > 0:
+                for service in services:
+                    if service.type == service_type:
+                        service_id = service.id
+                        service_list = 1
+
+            #logging.debug(service_list)
+
+            if auth_context is None:
+                public_url = '%s://%s:%s/%s' % (auth_protocol,
+                                                auth_host,
+                                                public_port,
+                                                auth_version)
+                admin_url = '%s://%s:%s/%s' % (auth_protocol,
+                                               auth_host,
+                                               auth_port,
+                                               auth_version)
+                internal_url = '%s://%s:%s/%s' % (auth_protocol,
+                                                  auth_host,
+                                                  services_port,
+                                                  auth_version)
+            else:
+                public_url = '%s://%s:%s/%s/%s' % (auth_protocol,
+                                                   auth_host,
+                                                   public_port,
+                                                   auth_context,
+                                                   auth_version)
+                admin_url = '%s://%s:%s/%s/%s' % (auth_protocol,
+                                                  auth_host,
+                                                  auth_port,
+                                                  auth_context,
+                                                  auth_version)
+                internal_url = '%s://%s:%s/%s/%s' % (auth_protocol,
+                                                     auth_host,
+                                                     services_port,
+                                                     auth_context,
+                                                     auth_version)
+
+            if service_list == 0 and fix:
+                service_new, endpoint_new = add_service(admin_token,
+                                                        endpoint,
+                                                        service_name,
+                                                        service_type,
+                                                        service_description,
+                                                        auth_region,
+                                                        public_url,
+                                                        admin_url,
+                                                        internal_url)
+                service_id = service_new.id
+                endpoint_list = 1
+                service_list = 1
+
+        if service_list < 1:
+            #logging.error('Keystone has the minimum requirements to operate
+            # (users, roles, tenants and relationships) but it has not the
+            # minimum endpoint or service identity...Please check....')
+            raise Exception('Keystone has the minimum requirements to operate '
+                            '(users, roles, tenants and relationships) but it '
+                            'has not the minimum endpoint or service Identity'
+                            '...Please check....')
+
+        #Getting endpoint of the identity service
+        if endpoint_list < 1:
+            endpoints = keystone.endpoints.list()
+            if endpoints is not None:
+                if len(endpoints) > 0:
+                    for endpoint_check in endpoints:
+                        if endpoint_check.service_id == service_id:
+                            endpoint_list = 1
+
+                if endpoint_list == 0 and fix:
+                    endpoint_new = _add_endpoint(admin_token,
+                                                 endpoint,
+                                                 service_id,
+                                                 admin_url,
+                                                 internal_url,
+                                                 public_url,
+                                                 auth_region)
+                    endpoint_list = 1
+
+        if endpoint_list < 1:
+            #logging.error('Keystone has the minimum requirements to operate '
+            #              '(users, roles, tenants and relationships, also the'
+            #              ' Identity Service but has not the endpoint'
+            #              '...Please check....')
+            raise Exception('Keystone has the minimum requirements to operate '
+                            '(users, roles, tenants and relationships, also '
+                            'the Identity Service, but it has not the '
+                            'endpoint of the identity service created...'
+                            'Please check....')
+
+        print'Validation and fixed of keystone finished successfully...'
+
+    except Exception, e:
+        import traceback
+        print traceback.format_exc()
+        #logging.error(traceback.format_exc())
+        #logging.error("Error at the moment to Create %s tenant. %s" %
+        # (tenant, e))
+        raise Exception('Error at the moment to validate and fix '
+                        'Keystone Service. Please check log... %s' % e)
+
+
+def add_service(admin_token, endpoint, service_name, service_type,
+                service_description, service_region, service_public_url,
+                service_admin_url, service_internal_url):
+    try:
+        keystone = client.Client(token=admin_token, endpoint=endpoint)
+        services = keystone.services.list()
+        if services is not None:
+            if len(services) > 0:
+                for service_row in services:
+                    if service_row.type == service_type:
+                        #logging.debug('Service Type %s specified already
+                        # exists on Keystone '
+                        #              'identity as %s.' % (service,
+                        # service_type_keystone))
+                        raise Exception('Service Type %s specified already '
+                                        'exists on Keystone as %s.' %
+                                        (service_name, service_type))
+
+        service_new = keystone.services.create(name=service_name,
+                                               service_type=service_type,
+                                               description=service_description)
+        if service_new is not None:
+            service_id = service_new.id
+            endpoint = _add_endpoint(admin_token, endpoint, service_id,
+                                     service_admin_url, service_internal_url,
+                                     service_public_url, service_region)
+            return service_new, endpoint
+
+    except Exception, e:
+        #logging.error("Error at the moment to add a Service. %s" % e)
+        raise Exception('Error at the moment to add a Service. '
+                        'Please check log %s' % e)
+
+
+def validate_credentials(user, password, tenant, endpoint, admin_token):
+    try:
+        keystone = client.Client(token=admin_token, endpoint=endpoint)
+        token = keystone.tokens.authenticate(username=user,
+                                             tenant_name=tenant,
+                                             password=password)
+        if token is not None:
+                print 'Validation of credentials for %s user in ' \
+                      'tenant %s was successful..' % (user, tenant)
+
+    except Exception, e:
+        #logging.error("Error at the moment to add a Service. %s" % e)
+        raise Exception('Error at the moment to Validate Credentials '
+                        'on Keystone for user %s. Please check log %s'
+                        % (user, e))
+
+
+def _add_endpoint(admin_token, endpoint, service_id, service_admin_url,
+                  service_internal_url, service_public_url, service_region):
+    try:
+        keystone = client.Client(token=admin_token, endpoint=endpoint)
+        endpoint = keystone.endpoints.\
+            create(service_id=service_id,
+                   adminurl=service_admin_url,
+                   internalurl=service_internal_url,
+                   publicurl=service_public_url,
+                   region=service_region)
+        if endpoint is not None:
+            return endpoint
+    except Exception, e:
+        #logging.error("Error at the moment to add a Service. %s" % e)
+        raise Exception('Error at the moment to add an endpoint. '
+                        'Please check log %s' % e)
+
+
+def validate_database(database_type, username, password, host, port,
+                      schema, drop_schema=None, install_database=None):
+    fab = fabuloso.Fabuloso()
+    fab.validate_database(database_type, username, password, host, port,
+                          schema, drop_schema, install_database)
+
+
+def validate_credentials(user, password, tenant, endpoint, admin_token):
+    fab = fabuloso.Fabuloso()
+    fab.validate_credentials(user, password, tenant, endpoint, admin_token)

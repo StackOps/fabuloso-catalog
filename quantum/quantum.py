@@ -14,6 +14,7 @@
 #   limitations under the License.
 from fabric.api import settings, sudo
 from cuisine import package_clean, package_ensure
+from fabuloso import fabuloso
 
 import fabuloso.utils as utils
 
@@ -102,3 +103,22 @@ def configure_ovs_plugin_vlan(vlan_start='1', vlan_end='4094',
                      'sudo /usr/bin/quantum-rootwrap '
                      '/etc/quantum/rootwrap.conf',
                      section='AGENT')
+
+
+def validate_database(database_type, username, password, host, port,
+                      schema, drop_schema=None, install_database=None):
+    fab = fabuloso.Fabuloso()
+    fab.validate_database(database_type, username, password, host, port,
+                          schema, drop_schema, install_database)
+
+
+def validate_credentials(user, password, tenant, endpoint, admin_token):
+    fab = fabuloso.Fabuloso()
+    fab.validate_credentials(user, password, tenant, endpoint, admin_token)
+
+
+def validate_rabbitmq(service_type, host, rport=None, ruser=None,
+                      rpassword=None, virtual_host=None):
+    fab = fabuloso.Fabuloso()
+    fab.send_rabbitMQ(service_type, host, rport, ruser, rpassword,
+                      virtual_host)

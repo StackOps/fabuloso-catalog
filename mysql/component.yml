@@ -51,3 +51,7 @@ Services:
       description: Creates a new database for automation and grants privileges on it
       methods:
           - setup_automation
+    - name: validate
+      description: Validates main database to operate with it
+      methods:
+          - validate_database

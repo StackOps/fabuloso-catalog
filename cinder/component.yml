@@ -17,3 +17,9 @@ Services:
       description: Create a volume with cinder
       methods:
           - create_volume
+    - name: validate
+      description: Validates cinder to operate with it
+      methods:
+          - validate_database
+          - validate_credentials
+          - validate_rabbitmq

@@ -16,4 +16,9 @@ Services:
       description: Configures the Quantum Server to know the VLAN for OVS must be enabled
       methods:
           - configure_ovs_plugin_vlan
-      
+    - name: validate
+      description: Validates cinder to operate with it
+      methods:
+          - validate_database
+          - validate_credentials
+          - validate_rabbitmq
