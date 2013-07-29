@@ -15,3 +15,7 @@ Services:
       description: Stops the service
       methods:
           - stop
+    - name: validate
+      description: Validates rabbitmq to operate with it
+      methods:
+          - validate_rabbitmq

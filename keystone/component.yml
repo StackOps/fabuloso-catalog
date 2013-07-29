@@ -1,7 +1,6 @@
 name: keystone
 file: keystone.py
 description: Operations over OpenStack Keystone module
-
 Services:
     - name: install
       description:  Install OpenStack Keystone from ubuntu packages
@@ -27,3 +26,17 @@ Services:
       description: Register the automation service and the endpoint
       methods:
           - define_automation_service
+    - name: validate
+      description: Validates keystone to operate with it and check the minimum requirements necessaries
+      methods:
+          - validate_database
+          - validate_requirements
+          - validate_credentials
+    - name: repair
+      description: Once validated keystone, even if not, the repair method validates and fixes keystone to operate with the minimum requirements necessaries
+      methods:
+          - repair_requirements
+    - name: add_service
+      description: Allows add a specific service to keystone
+      methods:
+          - add_service

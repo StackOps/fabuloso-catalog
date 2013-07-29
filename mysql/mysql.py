@@ -23,6 +23,7 @@ The following are the services available:
 """
 from fabric.api import sudo, settings
 from cuisine import package_ensure
+from fabuloso import fabuloso
 
 
 def configure(root_pass):
@@ -146,3 +147,10 @@ def configure_all_schemas(root_pass, password, mysql_host='127.0.0.1'):
     setup_schema(username='automation', schema_name='automation',
                  root_pass=root_pass,
                  password=password, drop_previous=False, mysql_host=mysql_host)
+
+
+def validate_database(database_type, username, password, host, port,
+                      schema, drop_schema=None, install_database=None):
+    fab = fabuloso.Fabuloso()
+    fab.validate_database(database_type, username, password, host, port,
+                          schema, drop_schema, install_database)
