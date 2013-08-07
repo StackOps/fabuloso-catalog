@@ -4,7 +4,7 @@
 ########################################
 singlenode = {
     # Public IP address to reach the host
-    'host': '192.168.1.138'
+    'host': '192.168.1.149'
 }
 
 ##########################################
@@ -161,4 +161,27 @@ rabbitmq = {
     'ruser': 'guest',
     'rpassword': 'guest',
     'virtual_host': '/'
+}
+
+storage = {
+    'master_storage_type': 'NFS',
+    'master_endpoint': singlenode['host'],
+    'master_hostname': '',
+    'master_datastore': '/exports/stackops',
+    'master_mount_parameters': 'defaults',
+    'volumes_storage_type': 'NFS',
+    'volumes_endpoint': singlenode['host'],
+    'volumes_hostname': '',
+    'volumes_datastore': '/exports/stackops/volumes',
+    'volumes_mount_parameters': 'defaults',
+    'images_storage_type': 'NFS',
+    'images_endpoint': singlenode['host'],
+    'images_hostname': '',
+    'images_datastore': '/exports/stackops/images',
+    'images_mount_parameters': 'defaults',
+    'instances_storage_type': 'NFS',
+    'instances_endpoint': singlenode['host'],
+    'instances_hostname': '',
+    'instances_datastore': '/exports/stackops/images',
+    'instances_mount_parameters': 'defaults'
 }

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-
 import fabuloso
 import propertiesval
 
@@ -34,8 +33,8 @@ keystone.validate()
 keystone.repair()
 
 #Add service in keystone (keystone component)
-keystone_add = fab.init_component("keystone", propertiesval.keystone_add, env)
-keystone_add.add_service()
+#keystone_add = fab.init_component("keystone", propertiesval.keystone_add, env)
+#keystone_add.add_service()
 
 
 # Validate Glance component
@@ -57,3 +56,10 @@ nova.validate()
 print '\nStarting quantum component validation\n'
 quantum = fab.init_component("nova", propertiesval.quantum, env)
 quantum.validate()
+
+#Install and configure
+print '\nInstalling and configuring server-nfs-internal\n'
+storage = fab.init_component("storage", propertiesval.storage, env)
+storage.install()
+print '\nStarting storage component validation\n'
+storage.validate()
