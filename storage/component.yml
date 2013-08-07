@@ -1,0 +1,39 @@
+name: storage
+file: storage.py
+description: Storage component configurator
+
+Services:
+    - name: start
+      description: Starts the service
+      methods:
+          - start
+    - name: install
+      description: Installs and configure the service
+      methods:
+          - install
+    - name: restart
+      description: Restarts the service
+      methods:
+          - restart
+    - name: stop
+      description: Stops the service
+      methods:
+          - stop
+    - name: validate
+      description: Validates service to operate with it
+      methods:
+          - validate
+    - name: storage_instances
+      description: Definition of backend storage for instances
+      methods:
+          - storage_instances
+    - name: storage_volumes
+      description: Definition of backend storage for volumes
+      methods:
+          - storage_volumes
+    - name: storage_images
+      description: Definition of backend storage for images
+      methods:
+          - storage_images
+
+
