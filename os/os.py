@@ -247,8 +247,6 @@ def add_repos():
          '| apt-key add -')
     sudo('echo "deb http://repos.stackops.net/ folsom-dev main" >> '
          '/etc/apt/sources.list.d/stackops.list')
-    sudo('echo "deb http://repos.stackops.net/ precise-dev main" '
-         '>> /etc/apt/sources.list.d/stackops.list')
     sudo('apt-get -y update')
 
 
