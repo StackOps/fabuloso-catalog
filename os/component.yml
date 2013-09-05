@@ -9,6 +9,10 @@ Services:
           - nameservers
           - block_devices
           - mounts
+    - name: change_hostname
+      description: Change the hostname of a remote host
+      methods:
+          - change_hostname
     - name: install
       description: Prepares remote system for a OS with StackOps deployment
       methods:
