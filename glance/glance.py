@@ -69,8 +69,9 @@ def sql_connect_string(host, password, port, schema, username):
     return sql_connection
 
 
-def set_config_file(user, password,
-                    mysql_username, mysql_password, mysql_schema='glance',
+def set_config_file(user='glance', password='stackops',
+                    mysql_username='glance', mysql_password='stackops',
+                    mysql_schema='glance',
                     tenant='service', mysql_host='127.0.0.1',
                     mysql_port='3306', auth_port='35357', auth_protocol='http',
                     auth_host='127.0.0.1'):

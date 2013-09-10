@@ -155,11 +155,12 @@ def sql_connect_string(host, password, port, schema, username):
     return sql_connection
 
 
-def set_config_file(user, password, auth_host,
-                    auth_port, auth_protocol, management_ip,
-                    mysql_username, mysql_password,
-                    mysql_schema='nova',
-                    tenant='service', mysql_host='127.0.0.1',
+def set_config_file(management_ip, user='nova', password='stackops',
+                    auth_host='127.0.0.1',
+                    auth_port='35357', auth_protocol='http',
+                    mysql_username='nova', mysql_password='stackops',
+                    mysql_schema='nova', tenant='service',
+                    mysql_host='127.0.0.1',
                     mysql_port='3306'):
 
     f = '/etc/nova/api-paste.ini'

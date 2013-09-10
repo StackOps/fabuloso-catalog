@@ -208,8 +208,10 @@ def configure_ovs_plugin_vlan(iface_bridge='eth1', br_postfix='eth1',
     quantum_plugin_openvswitch_agent_start()
 
 
-def configure_l3_agent(user, password, auth_url, management_ip,
-                       region, tenant='service'):
+def configure_l3_agent(user='quantum', password='stackops',
+                       auth_url='http://localhost:35357/v2.0',
+                       region='RegionOne', metadata_ip='127.0.0.1',
+                       tenant='service'):
     utils.set_option(L3_AGENT_CONF, 'debug', 'True')
     utils.set_option(L3_AGENT_CONF, 'interface_driver',
                      'quantum.agent.linux.interface.OVSInterfaceDriver')
@@ -220,7 +222,7 @@ def configure_l3_agent(user, password, auth_url, management_ip,
     utils.set_option(L3_AGENT_CONF, 'admin_password', password)
     utils.set_option(L3_AGENT_CONF, 'root_helper',
                      'sudo quantum-rootwrap /etc/quantum/rootwrap.conf')
-    utils.set_option(L3_AGENT_CONF, 'metadata_ip', management_ip)
+    utils.set_option(L3_AGENT_CONF, 'metadata_ip', metadata_ip)
     utils.set_option(L3_AGENT_CONF, 'use_namespaces', 'False')
 
 
@@ -229,8 +231,8 @@ def configure_dhcp_agent(name_server='8.8.8.8'):
     utils.set_option(DHCP_AGENT_CONF, 'dnsmasq_dns_server', name_server)
 
 
-def set_config_file(user, password, auth_host,
-                    auth_port, auth_protocol, tenant='service',
+def set_config_file(user='quantum', password='stackops', auth_host='127.0.0.1',
+                    auth_port='35357', auth_protocol='http', tenant='service',
                     rabbit_password='guest',
                     rabbit_host='127.0.0.1'):
 

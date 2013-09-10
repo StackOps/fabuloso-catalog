@@ -17,11 +17,15 @@ from cuisine import (package_ensure, package_clean, text_strip_margin,
                      file_write)
 
 
-def configure(keystone_host, ec2_internal_url,
-              compute_internal_url, keystone_internal_url,
-              glance_internal_url, cinder_internal_url,
-              quantum_internal_url, portal_internal_url=None,
-              activity_internal_url=None, chargeback_internal_url=None,
+def configure(ec2_internal_url="http://127.0.0.1:8773/services/Cloud",
+              compute_internal_url="http://127.0.0.1:8774/v1.1",
+              keystone_internal_url="http://127.0.0.1:5000/v2.0",
+              glance_internal_url="http://127.0.0.1:9292/v1",
+              cinder_internal_url="http://127.0.0.1:8776/v1",
+              quantum_internal_url="http://127.0.0.1:9696",
+              portal_internal_url="http://127.0.0.1:8080/portal",
+              activity_internal_url="http://127.0.0.1:8080/activity",
+              chargeback_internal_url="http://127.0.0.1:8080/chargeback",
               common_name='127.0.0.1'):
     """Generate apache configuration. Execute on both servers"""
 

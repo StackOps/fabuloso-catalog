@@ -26,7 +26,7 @@ from cuisine import package_ensure
 from fabuloso import fabuloso
 
 
-def configure(root_pass):
+def configure(root_pass='stackops'):
     """Generate mysql configuration. Execute on both servers"""
     __configure_ubuntu_packages(root_pass)
     stop()
@@ -83,47 +83,56 @@ def setup_schema(root_pass, username, password, schema_name,
              % (root_pass, schema_name, username, password))
 
 
-def setup_keystone(root_pass, keystone_user, keystone_password):
+def setup_keystone(root_pass='stackops', keystone_user='keystone',
+                   keystone_password='stackops'):
     setup_schema(username=keystone_user, password=keystone_password,
                  schema_name='keystone', root_pass=root_pass)
 
 
-def setup_nova(root_pass, nova_user, nova_password):
+def setup_nova(root_pass='stackops', nova_user='nova',
+               nova_password='stackops'):
     setup_schema(username=nova_user, password=nova_password,
                  schema_name='nova', root_pass=root_pass)
 
 
-def setup_glance(root_pass, glance_user, glance_password):
+def setup_glance(root_pass='stackops', glance_user='glance',
+                 glance_password='stackops'):
     setup_schema(username=glance_user, password=glance_password,
                  schema_name='glance', root_pass=root_pass)
 
 
-def setup_cinder(root_pass, cinder_user, cinder_password):
+def setup_cinder(root_pass='stackops', cinder_user='cinder',
+                 cinder_password='stackops'):
     setup_schema(username=cinder_user, password=cinder_password,
                  schema_name='cinder', root_pass=root_pass)
 
 
-def setup_quantum(root_pass, quantum_user, quantum_password):
+def setup_quantum(root_pass='stackops', quantum_user='quantum',
+                  quantum_password='stackops'):
     setup_schema(username=quantum_user, password=quantum_password,
                  schema_name='quantum', root_pass=root_pass)
 
 
-def setup_portal(root_pass, portal_user, portal_password):
+def setup_portal(root_pass='stackops', portal_user='portal',
+                 portal_password='stackops'):
     setup_schema(username=portal_user, password=portal_password,
                  schema_name='portal', root_pass=root_pass)
 
 
-def setup_accounting(root_pass, accounting_user, accounting_password):
+def setup_accounting(root_pass='stackops', accounting_user='activity',
+                     accounting_password='stackops'):
     setup_schema(username=accounting_user, password=accounting_password,
                  schema_name='activity', root_pass=root_pass)
 
 
-def setup_automation(root_pass, automation_user, automation_password):
+def setup_automation(root_pass='stackops', automation_user='automation',
+                     automation_password='stackops'):
     setup_schema(username=automation_user, password=automation_password,
                  schema_name='stackopshead', root_pass=root_pass)
 
 
-def configure_all_schemas(root_pass, password, mysql_host='127.0.0.1'):
+def configure_all_schemas(root_pass='stackops', password='stackops',
+                          mysql_host='127.0.0.1'):
     setup_schema(username='portal', schema_name='portal', root_pass=root_pass,
                  password=password, drop_previous=False, mysql_host=mysql_host)
     setup_schema(username='keystone', schema_name='keystone',

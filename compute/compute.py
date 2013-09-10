@@ -200,15 +200,16 @@ def configure_libvirt(hostname, shared_storage=False,
     compute_start()
 
 
-def set_config_file(user,  password, auth_host, auth_port,
-                    auth_protocol, admin_auth_url, quantum_url,
-                    mysql_username, mysql_password, glance_host,
-                    management_ip, glance_port, rabbit_host,
-                    libvirt_type, vncproxy_host,
-                    mysql_schema='nova',
+def set_config_file(management_ip, user='nova', password='stackops',
+                    auth_host='127.0.0.1', auth_port='35357',
+                    auth_protocol='http', quantum_url='http://127.0.0.1:9696',
+                    admin_auth_url='http://127.0.0.1:35357/v2.0',
+                    libvirt_type='kvm', rabbit_host='127.0.0.1',
+                    vncproxy_host='127.0.0.1', glance_host='127.0.0.1',
+                    glance_port='9292', mysql_username='nova',
+                    mysql_password='stackops', mysql_schema='nova',
                     mysql_host='127.0.0.1', tenant='service',
-                    mysql_port='3306',
-                    rabbit_password='guest',
+                    mysql_port='3306', rabbit_password='guest',
                     vncproxy_port='6080'):
 
     if management_ip is None:

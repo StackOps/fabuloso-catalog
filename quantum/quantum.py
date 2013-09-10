@@ -62,8 +62,8 @@ def install(cluster=False):
         stop()
 
 
-def set_config_file(user, password, auth_host,
-                    auth_port, auth_protocol, tenant='service'):
+def set_config_file(user='quantum', password='stackops', auth_host='127.0.0.1',
+                    auth_port='35357', auth_protocol='http', tenant='service'):
     utils.set_option(QUANTUM_API_PASTE_CONF, 'admin_tenant_name',
                      tenant, section='filter:authtoken')
     utils.set_option(QUANTUM_API_PASTE_CONF, 'admin_user',
