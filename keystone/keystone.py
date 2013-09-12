@@ -145,6 +145,7 @@ def configure_users(endpoint="'http://localhost:35357/v2.0'",
     """Configure basic service users/roles"""
     admin_tenant = _create_tenant(endpoint, admin_token, 'admin')
     head_tenant = _create_tenant(endpoint, admin_token, 'head')
+    _create_tenant(endpoint, admin_token, 'service')
     admin_role = _create_role(endpoint, admin_token, 'admin')
     member_role = _create_role(endpoint, admin_token, 'Member')
     keystone_admin_role = _create_role(endpoint, admin_token, 'KeystoneAdmin')
