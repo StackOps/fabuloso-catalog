@@ -209,12 +209,13 @@ def configure_ovs_plugin_vlan(iface_bridge='eth1', br_postfix='eth1',
 
 
 def configure_l3_agent(user='quantum', password='stackops',
-                       auth_url='http://localhost:35357/v2.0',
+                       auth_host='127.0.0.1',
                        region='RegionOne', metadata_ip='127.0.0.1',
                        tenant='service'):
     utils.set_option(L3_AGENT_CONF, 'debug', 'True')
     utils.set_option(L3_AGENT_CONF, 'interface_driver',
                      'quantum.agent.linux.interface.OVSInterfaceDriver')
+    auth_url = 'http://' + auth_host + ':35357/v2.0'
     utils.set_option(L3_AGENT_CONF, 'auth_url', auth_url)
     utils.set_option(L3_AGENT_CONF, 'auth_region', region)
     utils.set_option(L3_AGENT_CONF, 'admin_tenant_name', tenant)

@@ -200,10 +200,10 @@ def configure_libvirt(hostname, shared_storage=False,
     compute_start()
 
 
-def set_config_file(management_ip, user='nova', password='stackops',
+def set_config_file(management_ip='127.0.0.1', user='nova',
+                    password='stackops',
                     auth_host='127.0.0.1', auth_port='35357',
-                    auth_protocol='http', quantum_url='http://127.0.0.1:9696',
-                    admin_auth_url='http://127.0.0.1:35357/v2.0',
+                    auth_protocol='http', quantum_host='127.0.0.1',
                     libvirt_type='kvm', rabbit_host='127.0.0.1',
                     vncproxy_host='127.0.0.1', glance_host='127.0.0.1',
                     glance_port='9292', mysql_username='nova',
@@ -271,9 +271,10 @@ def set_config_file(management_ip, user='nova', password='stackops',
                      'stackops')
     utils.set_option(NOVA_COMPUTE_CONF, 'quantum_admin_tenant_name',
                      'service')
-
+    admin_auth_url = 'http://' + auth_host + ':35357/v2.0'
     utils.set_option(NOVA_COMPUTE_CONF, 'quantum_admin_auth_url',
                      admin_auth_url)
+    quantum_url = 'http://' + quantum_host + ':9696',
     utils.set_option(NOVA_COMPUTE_CONF, 'quantum_url',
                      quantum_url)
 
