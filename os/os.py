@@ -195,6 +195,9 @@ def change_hostname(hostname):
     sudo('echo "%s" > /etc/hostname' % hostname)
     sudo("sed -i 's/%s/%s/g' /etc/hosts" % (current_hostname, hostname))
     sudo("hostname %s" % hostname)
+    # Forcing renew of dhcp
+    sudo('echo "''" > /var/lib/dhcp/dhclient.leases')
+    sudo('dhclient -r && dhclient')
 
 
 def add_nova_user():
