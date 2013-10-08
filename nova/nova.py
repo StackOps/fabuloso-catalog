@@ -71,6 +71,15 @@ def console_start():
     console_stop()
     sudo("nohup service nova-console start")
 
+def conductor_stop():
+    with settings(warn_only=True):
+        sudo("nohup service nova-conductor stop")
+
+
+def conductor_start():
+    conductor_stop()
+    sudo("nohup service nova-conductor start")
+
 
 def consoleauth_stop():
     with settings(warn_only=True):
@@ -88,6 +97,7 @@ def stop():
     novncproxy_stop()
     cert_stop()
     console_stop()
+    conductor_stop()
     consoleauth_stop()
 
 
@@ -97,6 +107,7 @@ def start():
     novncproxy_start()
     cert_start()
     console_start()
+    conductor_start()
     consoleauth_start()
 
 
@@ -107,6 +118,7 @@ def uninstall_ubuntu_packages():
     package_clean('nova-common')
     package_clean('nova-scheduler')
     package_clean('nova-console')
+    package_clean('nova-conductor')
     package_clean('python-nova')
     package_clean('python-novaclient')
     package_clean('nova-consoleauth')
@@ -121,6 +133,7 @@ def install(cluster=False):
     package_ensure('nova-common')
     package_ensure('nova-scheduler')
     package_ensure('nova-console')
+    package_ensure('nova-conductor')
     package_ensure('python-nova')
     package_ensure('python-novaclient')
     package_ensure('nova-consoleauth')
@@ -132,6 +145,7 @@ def install(cluster=False):
         sudo('echo "manual" >> /etc/init/nova-novncproxy.override')
         sudo('echo "manual" >> /etc/init/nova-cert.override')
         sudo('echo "manual" >> /etc/init/nova-consoleauth.override')
+        sudo('echo "manual" >> /etc/init/nova-conductor.override')
         sudo('echo "manual" >> /etc/init/nova-scheduler.override')
         sudo('mkdir -p /usr/lib/ocf/resource.d/openstack')
         put('./ocf/nova-novnc', '/usr/lib/ocf/resource.d/openstack/nova-novnc',
@@ -140,6 +154,8 @@ def install(cluster=False):
             use_sudo=True)
         put('./ocf/nova-cert', '/usr/lib/ocf/resource.d/openstack/nova-cert',
             use_sudo=True)
+        put('./ocf/nova-conductor',
+            '/usr/lib/ocf/resource.d/openstack/nova-conductor', use_sudo=True)
         put('./ocf/nova-consoleauth',
             '/usr/lib/ocf/resource.d/openstack/nova-consoleauth',
             use_sudo=True)
@@ -184,16 +200,22 @@ def set_config_file(management_ip, user='nova', password='stackops',
 
     set_property('sql_connection', sql_connect_string(mysql_host,
                  mysql_password, mysql_port, mysql_schema, mysql_username))
-    set_property('scheduler_driver', 'nova.scheduler.simple.SimpleScheduler')
+    set_property('scheduler_driver',
+                 'nova.scheduler.filter_scheduler.FilterScheduler')
+    set_property('compute_scheduler_driver',
+                     'nova.scheduler.filter_scheduler.FilterScheduler')
     set_property('auth_strategy', 'keystone')
-    set_property('allow_admin_api', 'true')
-    set_property('use_deprecated_auth', 'false')
+    #set_property('allow_admin_api', 'true')
+    #set_property('use_deprecated_auth', 'false')
     set_property('ec2_private_dns_show_ip', 'True')
     set_property('api_paste_config', '/etc/nova/api-paste.ini')
     set_property('enabled_apis', 'ec2,osapi_compute,metadata')
     set_property('network_api_class', 'nova.network.quantumv2.api.API')
     set_property('dmz_cidr', '169.254.169.254/32')
     set_property('metadata_listen', '0.0.0.0')
+    set_property('metadata_listen_port', '8775')
+    set_property('service_quantum_metadata_proxy', 'True')
+    set_property('quantum_metadata_proxy_shared_secret', 'password')
     set_property('quantum_auth_strategy', 'keystone')
     set_property('quantum_admin_username', 'quantum')
     set_property('quantum_admin_password', 'stackops')

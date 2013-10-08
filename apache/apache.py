@@ -91,8 +91,8 @@ def _configure_default(ec2_internal_url, compute_internal_url,
         |   ProxyPass /keystone/v2.0 %s
         |   ProxyPassReverse /keystone/v2.0 %s
         |
-        |   ProxyPass /glance/v1 %s
-        |   ProxyPassReverse /glance/v1 %s
+        |   ProxyPass /glance %s
+        |   ProxyPassReverse /glance %s
         |
         |   ProxyPass /volume/v1 %s
         |   ProxyPassReverse /volume/v1 %s
@@ -209,8 +209,8 @@ def _configure_apache_ssl(ec2_internal_url, compute_internal_url,
     |   ProxyPass /keystone/v2.0 %s
     |   ProxyPassReverse /keystone/v2.0 %s
     |
-    |   ProxyPass /glance/v1 %s
-    |   ProxyPassReverse /glance/v1 %s
+    |   ProxyPass /glance/ %s
+    |   ProxyPassReverse /glance %s
     |
     |   ProxyPass /volume/v1 %s
     |   ProxyPassReverse /volume/v1 %s

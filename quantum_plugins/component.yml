@@ -13,11 +13,12 @@ Services:
       description: Configure the vlan for OpenVSwitch
       methods:
           - configure_ovs_plugin_vlan
-    - name: configure_l3_and_dhcp
-      description: Configures the router agent
+    - name: configure_network_agents
+      description: Configures the network node agents
       methods:
           - configure_l3_agent
           - configure_dhcp_agent
+          - configure_metadata_agent
     - name: start
       description: Starts the plugin
       methods: 

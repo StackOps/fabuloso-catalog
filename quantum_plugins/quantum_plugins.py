@@ -27,6 +27,8 @@ OVS_PLUGIN_CONF = '/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini'
 
 QUANTUM_CONF = '/etc/quantum/quantum.conf'
 
+QUANTUM_METADATA_CONF = '/etc/quantum/metadata_agent.ini'
+
 
 def openvswitch_stop():
     with settings(warn_only=True):
@@ -68,11 +70,22 @@ def quantum_l3_agent_start():
     sudo("service quantum-l3-agent start")
 
 
+def quantum_metadata_agent_stop():
+    sudo("service quantum-metadata-agent stop")
+
+
+def quantum_metadata_agent_start():
+    quantum_metadata_agent_stop()
+    with settings(warn_only=True):
+        sudo("service quantum-metadata-agent start")
+
+
 def stop():
     openvswitch_stop()
     quantum_plugin_openvswitch_agent_stop()
     quantum_dhcp_agent_stop()
     quantum_l3_agent_stop()
+    quantum_metadata_agent_stop()
 
 
 def start():
@@ -80,6 +93,7 @@ def start():
     quantum_plugin_openvswitch_agent_start()
     quantum_dhcp_agent_start()
     quantum_l3_agent_start()
+    quantum_metadata_agent_start()
 
 
 def compile_datapath():
@@ -98,6 +112,7 @@ def configure_ubuntu_packages():
     package_ensure('quantum-plugin-openvswitch-agent')
     package_ensure('quantum-l3-agent')
     package_ensure('quantum-dhcp-agent')
+    package_ensure('quantum-metadata-agent')
     package_ensure('python-pyparsing')
     package_ensure('python-mysqldb')
 
@@ -110,6 +125,7 @@ def uninstall_ubuntu_packages():
     package_clean('quantum-plugin-openvswitch-agent')
     package_clean('quantum-l3-agent')
     package_clean('quantum-dhcp-agent')
+    package_clean('quantum-metadata-agent')
     package_clean('python-pyparsing')
     package_clean('python-mysqldb')
     package_clean('vlan')
@@ -207,6 +223,21 @@ def configure_ovs_plugin_vlan(iface_bridge='eth1', br_postfix='eth1',
     openvswitch_start()
     quantum_plugin_openvswitch_agent_start()
 
+def configure_metadata_agent(user='quantum', password='stackops',
+                             auth_host='127.0.0.1',
+                             region='RegionOne', metadata_ip='127.0.0.1',
+                             tenant='service'):
+    auth_url = 'http://' + auth_host + ':35357/v2.0'
+    utils.set_option(QUANTUM_METADATA_CONF, 'auth_url', auth_url)
+    utils.set_option(QUANTUM_METADATA_CONF, 'auth_region', region)
+    utils.set_option(QUANTUM_METADATA_CONF, 'admin_tenant_name', tenant)
+    utils.set_option(QUANTUM_METADATA_CONF, 'admin_user', user)
+    utils.set_option(QUANTUM_METADATA_CONF, 'admin_password', password)
+    utils.set_option(QUANTUM_METADATA_CONF, 'nova_metadata_ip', metadata_ip)
+    utils.set_option(QUANTUM_METADATA_CONF, 'nova_metadata_port', '8775')
+    utils.set_option(QUANTUM_METADATA_CONF,
+                     'quantum_metadata_proxy_shared_secret', 'password')
+
 
 def configure_l3_agent(user='quantum', password='stackops',
                        auth_host='127.0.0.1',
@@ -224,18 +255,17 @@ def configure_l3_agent(user='quantum', password='stackops',
     utils.set_option(L3_AGENT_CONF, 'root_helper',
                      'sudo quantum-rootwrap /etc/quantum/rootwrap.conf')
     utils.set_option(L3_AGENT_CONF, 'metadata_ip', metadata_ip)
-    utils.set_option(L3_AGENT_CONF, 'use_namespaces', 'False')
+    utils.set_option(L3_AGENT_CONF, 'use_namespaces', 'True')
 
 
 def configure_dhcp_agent(name_server='8.8.8.8'):
-    utils.set_option(DHCP_AGENT_CONF, 'use_namespaces', 'False')
+    utils.set_option(DHCP_AGENT_CONF, 'use_namespaces', 'True')
     utils.set_option(DHCP_AGENT_CONF, 'dnsmasq_dns_server', name_server)
 
 
 def set_config_file(user='quantum', password='stackops', auth_host='127.0.0.1',
                     auth_port='35357', auth_protocol='http', tenant='service',
-                    rabbit_password='guest',
-                    rabbit_host='127.0.0.1'):
+                    rabbit_password='guest', rabbit_host='127.0.0.1'):
 
     utils.set_option(QUANTUM_API_PASTE_CONF, 'admin_tenant_name',
                      tenant, section='filter:authtoken')

@@ -246,9 +246,13 @@ def add_repos():
          'main universe" >> /etc/apt/sources.list')
     sudo('echo "deb http://us.archive.ubuntu.com/ubuntu/ precise-updates '
          'main universe" >> /etc/apt/sources.list')
+    sudo('echo "deb http://ubuntu-cloud.archive.canonical.com/ubuntu '
+         'precise-updates/grizzly main" >> /etc/apt/sources.list')
+    sudo('apt-get -y update')
+    package_ensure('ubuntu-cloud-keyring')
     sudo('wget -O - http://repos.stackops.net/keys/stackopskey_pub.gpg '
          '| apt-key add -')
-    sudo('echo "deb http://repos.stackops.net/ folsom-dev main" >> '
+    sudo('echo "deb http://repos.stackops.net/ grizzly-dev main" >> '
          '/etc/apt/sources.list.d/stackops.list')
     sudo('apt-get -y update')
 

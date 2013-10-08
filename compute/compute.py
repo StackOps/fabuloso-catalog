@@ -22,6 +22,8 @@ BONUS_PAGES = 40
 
 NOVA_COMPUTE_CONF = '/etc/nova/nova-compute.conf'
 
+NOVA_CONF = '/etc/nova/nova.conf'
+
 DEFAULT_LIBVIRT_BIN_CONF = '/etc/default/libvirt-bin'
 
 LIBVIRT_BIN_CONF = '/etc/init/libvirt-bin.conf'
@@ -103,15 +105,11 @@ def compute_stop():
     with settings(warn_only=True):
         sudo("nohup service libvirt-bin stop")
     with settings(warn_only=True):
-        sudo("nohup service nova-api-metadata stop")
-    with settings(warn_only=True):
         sudo("nohup service nova-compute stop")
 
 
 def compute_start():
     compute_stop()
-    with settings(warn_only=True):
-        sudo("nohup service nova-api-metadata start")
     sudo("nohup service libvirt-bin start")
     sudo("nohup service nova-compute start")
 
@@ -274,7 +272,7 @@ def set_config_file(management_ip='127.0.0.1', user='nova',
     admin_auth_url = 'http://' + auth_host + ':35357/v2.0'
     utils.set_option(NOVA_COMPUTE_CONF, 'quantum_admin_auth_url',
                      admin_auth_url)
-    quantum_url = 'http://' + quantum_host + ':9696',
+    quantum_url = 'http://' + quantum_host + ':9696'
     utils.set_option(NOVA_COMPUTE_CONF, 'quantum_url',
                      quantum_url)
 
@@ -282,7 +280,7 @@ def set_config_file(management_ip='127.0.0.1', user='nova',
                      'http://%s:%s/vnc_auto.html'
                      % (vncproxy_host, vncproxy_port))
     utils.set_option(NOVA_COMPUTE_CONF, 'vncserver_listen', '0.0.0.0')
-    utils.set_option(NOVA_COMPUTE_CONF, 'novnc_enable', 'true')
+    utils.set_option(NOVA_COMPUTE_CONF, 'vnc_enable', 'true')
     utils.set_option(NOVA_COMPUTE_CONF, 'vncserver_proxyclient_address',
                      management_ip)
 
@@ -298,12 +296,9 @@ def set_config_file(management_ip='127.0.0.1', user='nova',
     utils.set_option(NOVA_COMPUTE_CONF, 'rabbit_password', rabbit_password)
 
     utils.set_option(NOVA_COMPUTE_CONF, 'ec2_private_dns_show_ip', 'True')
-    utils.set_option(NOVA_COMPUTE_CONF, 'enabled_apis',
-                     'ec2,osapi_compute,metadata')
     utils.set_option(NOVA_COMPUTE_CONF, 'network_api_class',
                      'nova.network.quantumv2.api.API')
     utils.set_option(NOVA_COMPUTE_CONF, 'dmz_cidr', '169.254.169.254/32')
-    utils.set_option(NOVA_COMPUTE_CONF, 'metadata_listen', '0.0.0.0')
     utils.set_option(NOVA_COMPUTE_CONF, 'volume_api_class',
                      'nova.volume.cinder.API')
     utils.set_option(NOVA_COMPUTE_CONF, 'cinder_catalog_info',
@@ -311,6 +306,11 @@ def set_config_file(management_ip='127.0.0.1', user='nova',
 
     utils.set_option(NOVA_COMPUTE_CONF, 'allow_same_net_traffic',
                      'True')
+    # TOTHINK if its necessary
+    utils.set_option(NOVA_COMPUTE_CONF, 'service_quantum_metadata_proxy',
+                     'True')
+    utils.set_option(NOVA_COMPUTE_CONF, 'quantum_metadata_proxy_shared_secret',
+                     'password')
 
     start()
 

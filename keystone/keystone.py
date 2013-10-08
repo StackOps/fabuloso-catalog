@@ -84,6 +84,9 @@ def set_config_file(admin_token='password', mysql_username='keystone',
          "/etc/keystone/keystone.conf" %
          _sql_connect_string(mysql_host, mysql_password, mysql_port,
                              mysql_schema, mysql_username))
+
+    sudo("sed -i 's/^.*token_format =.*$/token_format = %s/g' "
+         "/etc/keystone/keystone.conf" % 'UUID')
     sudo("service keystone restart")
     sudo("keystone-manage db_sync")
 

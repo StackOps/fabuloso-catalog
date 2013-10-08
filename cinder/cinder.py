@@ -91,6 +91,8 @@ def set_config_file(user='cinder', password='stackops', auth_host='127.0.0.1',
                                               mysql_port, mysql_schema,
                                               mysql_username))
     utils.set_option(CINDER_CONF, 'verbose', 'true')
+    utils.set_option(CINDER_CONF, 'api_paste_config',
+                     '/etc/cinder/api-paste.ini')
     utils.set_option(CINDER_CONF, 'volume_group', 'cinder-volumes')
     utils.set_option(CINDER_CONF, 'log_dir', '/var/log/cinder')
     utils.set_option(CINDER_CONF, 'notification_driver',

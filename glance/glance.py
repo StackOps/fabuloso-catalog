@@ -15,8 +15,12 @@
 from fabric.api import sudo, settings, put, cd, local, puts
 from cuisine import package_ensure, package_clean
 from fabuloso import fabuloso
+import fabuloso.utils as utils
 
 GLANCE_IMAGES = '/var/lib/glance/images'
+GLANCE_API_CONFIG = '/etc/glance/glance-api.conf'
+GLANCE_REGISTRY_CONFIG = '/etc/glance/glance-registry.conf'
+GLANCE_REGISTRY_PASTE_INI = '/etc/glance/glance-registry-paste.ini'
 
 
 def stop():
@@ -75,6 +79,8 @@ def set_config_file(user='glance', password='stackops',
                     tenant='service', mysql_host='127.0.0.1',
                     mysql_port='3306', auth_port='35357', auth_protocol='http',
                     auth_host='127.0.0.1'):
+    utils.set_option(GLANCE_API_CONFIG, 'enable_v1_api', 'True')
+    utils.set_option(GLANCE_API_CONFIG, 'enable_v2_api', 'True')
     for f in ['/etc/glance/glance-api.conf',
               '/etc/glance/glance-registry.conf']:
         sudo("sed -i 's#sql_connection.*$#sql_connection = %s#g' %s"
@@ -91,7 +97,24 @@ def set_config_file(user='glance', password='stackops',
         sudo("sed -i 's/auth_protocol.*$/auth_protocol = %s/g' %s"
              % (auth_protocol, f))
 
-    sudo("sed -i 's/^#flavor=.*$/flavor=keystone+cachemanagement/g' "
+    utils.set_option(GLANCE_REGISTRY_CONFIG, 'config_file',
+                     '/etc/glance/glance-registry-paste.ini',
+                     section='paste_deploy')
+    utils.set_option(GLANCE_API_CONFIG,
+                     'config_file', '/etc/glance/glance-api-paste.ini',
+                     section='paste_deploy')
+    utils.set_option(GLANCE_API_CONFIG,
+                     'flavor', 'keystone',
+                     section='paste_deploy')
+    utils.set_option(GLANCE_API_CONFIG,
+                     'flavor', 'keystone',
+                     section='paste_deploy')
+
+    utils.set_option(GLANCE_REGISTRY_PASTE_INI, 'pipeline',
+                     'authtoken context registryapp',
+                     section='pipeline:glance-registry-keystone')
+
+    sudo("sed -i 's/^#flavor=.*$/flavor=keystone/g' "
          "/etc/glance/glance-api.conf")
     sudo("sed -i 's/^#flavor=.*$/flavor=keystone/g' "
          "/etc/glance/glance-registry.conf")
