@@ -236,10 +236,18 @@ def remove_repos():
 
 def add_repos():
     """Clean and Add necessary repositories and updates"""
+    sudo('rm -f /etc/apt/sources.list.d/stackops.list')
+    sudo('wget -O - http://repos.stackops.net/keys/stackopskey_pub.gpg '
+         '| apt-key add -')
+    sudo('echo "deb http://repos.stackops.net/ grizzly-dev main" >> '
+         '/etc/apt/sources.list.d/stackops.list')
+    sudo('apt-get -y update')
+    # Setting first to highest priority
+    sudo('echo "deb http://repos.stackops.net/ grizzly-dev main" >> '
+         '/etc/apt/sources.list')
     sudo('sed -i /precise-updates/d /etc/apt/sources.list')
     sudo('sed -i /precise-security/d /etc/apt/sources.list')
     sudo('sed -i /archive.ubuntu.com/d /etc/apt/sources.list')
-    sudo('rm -f /etc/apt/sources.list.d/stackops.list')
     sudo('echo "deb http://us.archive.ubuntu.com/ubuntu/ precise main '
          'universe" >> /etc/apt/sources.list')
     sudo('echo "deb http://us.archive.ubuntu.com/ubuntu/ precise-security '
@@ -250,11 +258,6 @@ def add_repos():
          'precise-updates/grizzly main" >> /etc/apt/sources.list')
     sudo('apt-get -y update')
     package_ensure('ubuntu-cloud-keyring')
-    sudo('wget -O - http://repos.stackops.net/keys/stackopskey_pub.gpg '
-         '| apt-key add -')
-    sudo('echo "deb http://repos.stackops.net/ grizzly-dev main" >> '
-         '/etc/apt/sources.list.d/stackops.list')
-    sudo('apt-get -y update')
 
 
 def configure_bond(bond_name=None, bond_slaves=None, bond_options='mode 1'):
