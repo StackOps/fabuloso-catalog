@@ -81,6 +81,10 @@ def set_config_file(user='quantum', password='stackops', auth_host='127.0.0.1',
     utils.set_option(QUANTUM_CONF, 'notification_topics',
                      'notifications,monitor')
     utils.set_option(QUANTUM_CONF, 'default_notification_level', 'INFO')
+    # Configurtin LBAAS service
+    utils.set_option(QUANTUM_CONF, 'service_plugins',
+                     'quantum.plugins.services.'
+                     'agent_loadbalancer.plugin.LoadBalancerPlugin')
 
 
 def configure_ovs_plugin_vlan(vlan_start='1', vlan_end='4094',

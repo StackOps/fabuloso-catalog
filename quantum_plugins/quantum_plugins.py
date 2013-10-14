@@ -23,6 +23,8 @@ DHCP_AGENT_CONF = '/etc/quantum/dhcp_agent.ini'
 
 L3_AGENT_CONF = '/etc/quantum/l3_agent.ini'
 
+LBAAS_AGENT_CONF = '/etc/quantum/lbaas_agent.ini'
+
 OVS_PLUGIN_CONF = '/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini'
 
 QUANTUM_CONF = '/etc/quantum/quantum.conf'
@@ -80,12 +82,23 @@ def quantum_metadata_agent_start():
         sudo("service quantum-metadata-agent start")
 
 
+def quantum_lbaas_agent_stop():
+    sudo("service quantum-lbaas-agent stop")
+
+
+def quantum_lbaas_agent_start():
+    quantum_lbaas_agent_stop()
+    with settings(warn_only=True):
+        sudo("service quantum-lbaas-agent start")
+
+
 def stop():
     openvswitch_stop()
     quantum_plugin_openvswitch_agent_stop()
     quantum_dhcp_agent_stop()
     quantum_l3_agent_stop()
     quantum_metadata_agent_stop()
+    quantum_lbaas_agent_stop()
 
 
 def start():
@@ -94,6 +107,7 @@ def start():
     quantum_dhcp_agent_start()
     quantum_l3_agent_start()
     quantum_metadata_agent_start()
+    quantum_lbaas_agent_start()
 
 
 def compile_datapath():
@@ -112,6 +126,8 @@ def configure_ubuntu_packages():
     package_ensure('quantum-plugin-openvswitch-agent')
     package_ensure('quantum-l3-agent')
     package_ensure('quantum-dhcp-agent')
+    package_ensure('quantum-lbaas-agent')
+    package_ensure('haproxy')
     package_ensure('quantum-metadata-agent')
     package_ensure('python-pyparsing')
     package_ensure('python-mysqldb')
@@ -126,6 +142,8 @@ def uninstall_ubuntu_packages():
     package_clean('quantum-l3-agent')
     package_clean('quantum-dhcp-agent')
     package_clean('quantum-metadata-agent')
+    package_clean('quantum-lbaas-agent')
+    package_clean('haproxy')
     package_clean('python-pyparsing')
     package_clean('python-mysqldb')
     package_clean('vlan')
@@ -223,6 +241,20 @@ def configure_ovs_plugin_vlan(iface_bridge='eth1', br_postfix='eth1',
     openvswitch_start()
     quantum_plugin_openvswitch_agent_start()
 
+
+def configure_lbaas_agent():
+    sudo('mkdir -p /etc/quantum/plugins/services/agent_loadbalancer/')
+    utils.set_option(LBAAS_AGENT_CONF, 'use_namespaces', 'True')
+    utils.set_option(LBAAS_AGENT_CONF, 'interface_driver',
+                     'quantum.agent.linux.interface.OVSInterfaceDriver')
+    utils.set_option(LBAAS_AGENT_CONF, 'device_driver',
+                     'quantum.plugins.services.agent_loadbalancer.drivers.'
+                     'haproxy.namespace_driver.HaproxyNSDriver')
+    utils.set_option(LBAAS_AGENT_CONF, 'user_group', 'haproxy')
+    #utils.set_option(LBAAS_AGENT_CONF, 'ovs_use_veth', 'True')
+
+
+
 def configure_metadata_agent(user='quantum', password='stackops',
                              auth_host='127.0.0.1',
                              region='RegionOne', metadata_ip='127.0.0.1',
@@ -256,11 +288,13 @@ def configure_l3_agent(user='quantum', password='stackops',
                      'sudo quantum-rootwrap /etc/quantum/rootwrap.conf')
     utils.set_option(L3_AGENT_CONF, 'metadata_ip', metadata_ip)
     utils.set_option(L3_AGENT_CONF, 'use_namespaces', 'True')
+    #utils.set_option(L3_AGENT_CONF, 'ovs_use_veth', 'True')
 
 
 def configure_dhcp_agent(name_server='8.8.8.8'):
     utils.set_option(DHCP_AGENT_CONF, 'use_namespaces', 'True')
     utils.set_option(DHCP_AGENT_CONF, 'dnsmasq_dns_server', name_server)
+    #utils.set_option(DHCP_AGENT_CONF, 'ovs_use_veth', 'True')
 
 
 def set_config_file(user='quantum', password='stackops', auth_host='127.0.0.1',

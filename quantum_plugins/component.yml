@@ -19,6 +19,7 @@ Services:
           - configure_l3_agent
           - configure_dhcp_agent
           - configure_metadata_agent
+          - configure_lbaas_agent
     - name: start
       description: Starts the plugin
       methods: 
