@@ -12,7 +12,6 @@ Services:
       description: Prepares a database and a user password for each StackOps schemas
       methods:
           - configure
-          - start
           - setup_keystone
           - setup_nova
           - setup_glance

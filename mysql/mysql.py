@@ -42,7 +42,7 @@ def configure(root_pass='stackops'):
 
 
 def start():
-    stop()
+    #stop()
     sudo("nohup service mysql start")
 
 
@@ -59,8 +59,8 @@ def __configure_ubuntu_packages(root_pass):
 
 
 def stop():
-    with settings(warn_only=True):
-        sudo("nohup service mysql stop")
+    #with settings(warn_only=True):
+    sudo("nohup service mysql stop")
 
 
 def setup_schema(root_pass, username, password, schema_name,
