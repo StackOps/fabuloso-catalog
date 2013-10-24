@@ -197,7 +197,7 @@ def change_hostname(hostname):
     sudo("hostname %s" % hostname)
 
 
-def dhcp_request()
+def dhcp_request():
     # Forcing renew of dhcp
     sudo('echo "''" > /var/lib/dhcp/dhclient.leases')
     sudo('dhclient -r && dhclient')
