@@ -12,6 +12,7 @@ Services:
       description: Prepares a database and a user password for each StackOps schemas
       methods:
           - configure
+          - start
           - setup_keystone
           - setup_nova
           - setup_glance
@@ -46,11 +47,11 @@ Services:
       description: Creates a new database for accounting and grants privileges on it
       methods:
           - setup_accounting
+    - name: set_chargeback
+      description: Creates a new database for chargeback and grants privileges on it
+      methods:
+          - setup_chargeback
     - name: set_automation
       description: Creates a new database for automation and grants privileges on it
       methods:
           - setup_automation
-    - name: validate
-      description: Validates main database to operate with it
-      methods:
-          - validate_database

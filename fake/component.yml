@@ -3,7 +3,7 @@ file: fake.py
 description: Fake Component
 
 Services:
-    - name: fake_install
+    - name: install
       description: Install and configure component file
       methods:
           - install

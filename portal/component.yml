@@ -1,0 +1,17 @@
+name: portal
+file: portal.py
+description: StackOps Portal Component
+
+Services:
+    - name: install
+      description: Install and Configure StackOps portal
+      methods:
+          - configure
+    - name: start 
+      description: Start portal service
+      methods: 
+          - start
+    - name: stop
+      description: Stop portal service
+      methods:
+          - stop

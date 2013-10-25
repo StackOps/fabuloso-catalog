@@ -1,0 +1,23 @@
+name: chargeback
+file: chargeback.py
+description: StackOps Chargeback, Accounting and Activity Component
+
+Services:
+    - name: install
+      description: Install and Configure StackOps Chargeback
+      methods:
+          - configure_ubuntu_packages
+          - configure_activity
+          - configure_chargeback
+    - name: uninstall
+      description: Uninstall StackOps Chargeback
+      methods:
+          - uninstall_ubuntu_packages
+    - name: start
+      description: Start portal service
+      methods: 
+          - start
+    - name: stop
+      description: Stop portal service
+      methods:
+          - stop

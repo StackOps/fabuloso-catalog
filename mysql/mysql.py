@@ -23,7 +23,6 @@ The following are the services available:
 """
 from fabric.api import sudo, settings
 from cuisine import package_ensure
-from fabuloso import fabuloso
 
 
 def configure(root_pass='stackops'):
@@ -31,7 +30,7 @@ def configure(root_pass='stackops'):
     __configure_ubuntu_packages(root_pass)
     stop()
 
-    sudo('echo "manual" >> /etc/init/mysql.override')
+#    sudo('echo "manual" >> /etc/init/mysql.override')
     sudo('chmod -R og=rxw /var/lib/mysql')
     sudo('chown -R mysql:mysql /var/lib/mysql')
     start()
@@ -42,11 +41,11 @@ def configure(root_pass='stackops'):
 
 
 def start():
-    #stop()
+    stop()
     sudo("nohup service mysql start")
 
 
-def __configure_ubuntu_packages(root_pass):
+def __configure_ubuntu_packages(root_pass='stackops'):
     """Configure mysql ubuntu packages"""
     sudo('echo mysql-server-5.5 mysql-server/root_password password %s'
          ' | debconf-set-selections' % root_pass)
@@ -59,12 +58,12 @@ def __configure_ubuntu_packages(root_pass):
 
 
 def stop():
-    #with settings(warn_only=True):
-    sudo("nohup service mysql stop")
+    with settings(warn_only=True):
+        sudo("nohup service mysql stop")
 
 
-def setup_schema(root_pass, username, password, schema_name,
-                 host=None):
+def setup_schema(root_pass='stackops', username=None, password=None,
+                 schema_name=None, host=None):
 
     sudo('mysql -uroot -p%s -e "DROP DATABASE IF EXISTS %s;"'
          % (root_pass, schema_name))
@@ -125,6 +124,12 @@ def setup_accounting(root_pass='stackops', accounting_user='activity',
                  schema_name='activity', root_pass=root_pass)
 
 
+def setup_chargeback(root_pass='stackops', chargeback_user='chargeback',
+                     chargeback_password='stackops'):
+    setup_schema(username=chargeback_user, password=chargeback_password,
+                 schema_name='chargeback', root_pass=root_pass)
+
+
 def setup_automation(root_pass='stackops', automation_user='automation',
                      automation_password='stackops'):
     setup_schema(username=automation_user, password=automation_password,
@@ -153,13 +158,9 @@ def configure_all_schemas(root_pass='stackops', password='stackops',
     setup_schema(username='accounting', schema_name='accounting',
                  root_pass=root_pass,
                  password=password, drop_previous=False, mysql_host=mysql_host)
+    setup_schema(username='chargeback', schema_name='chargeback',
+                 root_pass=root_pass,
+                 password=password, drop_previous=False, mysql_host=mysql_host)
     setup_schema(username='automation', schema_name='automation',
                  root_pass=root_pass,
                  password=password, drop_previous=False, mysql_host=mysql_host)
-
-
-def validate_database(database_type, username, password, host, port,
-                      schema, drop_schema=None, install_database=None):
-    fab = fabuloso.Fabuloso()
-    fab.validate_database(database_type, username, password, host, port,
-                          schema, drop_schema, install_database)
