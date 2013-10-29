@@ -9,6 +9,7 @@ Services:
           - configure_ubuntu_packages
           - configure_activity
           - configure_chargeback
+          - start
     - name: uninstall
       description: Uninstall StackOps Chargeback
       methods:

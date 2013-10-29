@@ -36,27 +36,23 @@ def configure_ubuntu_packages():
     package_ensure('stackops-glance-portal-plugin')
     package_ensure('stackops-instances-portal-plugin')
     package_ensure('stackops-zendesk-portal-plugin')
-    package_ensure('stackops-activity-portal-plugin')
     package_ensure('stackops-accounting-portal-plugin')
     package_ensure('stackops-cinder-portal-plugin')
     package_ensure('stackops-security-portal-plugin')
     package_ensure('stackops-quotas-portal-plugin')
     package_ensure('stackops-flavors-portal-plugin')
     package_ensure('stackops-networking-portal-plugin')
-    package_ensure('stackops-head-portal-plugin')
     package_ensure('stackops-hostsmanager-portal-plugin')
 
 
 def uninstall_ubuntu_packages():
     """Uninstall portal packages"""
     package_clean('stackops-hostsmanager-portal-plugin')
-    package_clean('stackops-head-portal-plugin')
     package_clean('stackops-networking-portal-plugin')
     package_clean('stackops-flavors-portal-plugin')
     package_clean('stackops-quotas-portal-plugin')
     package_clean('stackops-security-portal-plugin')
     package_clean('stackops-cinder-portal-plugin')
-    package_clean('stackops-activity-portal-plugin')
     package_clean('stackops-accounting-portal-plugin')
     package_clean('stackops-documentation-portal-plugin')
     package_clean('stackops-glance-portal-plugin')
@@ -70,7 +66,7 @@ def uninstall_ubuntu_packages():
 
 def configure(mysql_username='portal',
               mysql_password='stackops',
-              admin_token='stackops',
+              admin_token='password',
               mysql_admin_password='stackops',
               keystone_url='http://localhost:5000/v2.0',
               keystone_admin_url='http://localhost:35357/v2.0',

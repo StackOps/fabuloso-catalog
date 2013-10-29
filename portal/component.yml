@@ -15,3 +15,7 @@ Services:
       description: Stop portal service
       methods:
           - stop
+    - name: uninstall
+      description: Uninstall StackOps portal
+      methods:
+          - uninstall_ubuntu_packages
