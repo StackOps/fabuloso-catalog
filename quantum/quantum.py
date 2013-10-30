@@ -45,6 +45,7 @@ def start():
 
 def uninstall_ubuntu_packages():
     """Uninstall openvswitch and quantum packages"""
+    package_clean('python-amqp')
     package_clean('quantum-server')
     package_clean('quantum-plugin-openvswitch')
     package_clean('python-pyparsing')
@@ -54,6 +55,7 @@ def uninstall_ubuntu_packages():
 def install(cluster=False):
     """Generate quantum configuration. Execute on both servers"""
     """Configure openvwsitch and quantum packages"""
+    package_ensure('python-amqp')
     package_ensure('quantum-server')
     package_ensure('quantum-plugin-openvswitch')
     package_ensure('python-pyparsing')

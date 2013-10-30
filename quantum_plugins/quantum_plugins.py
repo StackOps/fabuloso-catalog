@@ -90,6 +90,7 @@ def compile_datapath():
 
 def configure_ubuntu_packages():
     """Configure openvwsitch and quantum packages"""
+    package_ensure('python-amqp')
     package_ensure('vlan')
     package_ensure('bridge-utils')
     package_ensure('python-cliff')
@@ -104,6 +105,7 @@ def configure_ubuntu_packages():
 
 def uninstall_ubuntu_packages():
     """Uninstall openvswitch and quantum packages"""
+    package_clean('python-amqp')
     package_clean('openvswitch-datapath-dkms')
     package_clean('openvswitch-switch')
     package_clean('python-cliff')
