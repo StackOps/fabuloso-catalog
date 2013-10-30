@@ -118,6 +118,7 @@ def compute_start():
 
 def configure_ubuntu_packages():
     """Configure compute packages"""
+    package_ensure('python-amqp')
     package_ensure('python-software-properties')
     package_ensure('ntp')
     package_ensure('kvm')
@@ -130,6 +131,7 @@ def configure_ubuntu_packages():
 
 def uninstall_ubuntu_packages():
     """Uninstall compute packages"""
+    package_clean('python-amqp')
     package_clean('python-software-properties')
     package_clean('ntp')
     package_clean('kvm')
