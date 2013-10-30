@@ -13,6 +13,8 @@ Services:
           - configure_libvirt
           - set_config_file
           - configure_quantum
+          - configure_ovs_plugin_vlan
+          - start
     - name: configure_ovs_plugin_vlan
       description: Configure the openvswitch
       methods:
