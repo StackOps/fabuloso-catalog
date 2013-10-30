@@ -8,6 +8,8 @@ Services:
       methods:
           - install
           - set_config_file
+          - configure_ovs_plugin_vlan
+          - start
     - name: start
       description: Start the Quantum service
       methods: 
