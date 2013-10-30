@@ -10,7 +10,8 @@ Services:
           - install
           - set_config_file
           - configure_ovs_plugin_vlan
-          - configure_l3_and_dhcp
+          - configure_l3_agent
+          - configure_dhcp_agent
           - start
     - name: configure_ovs_plugin_vlan
       description: Configure the vlan for OpenVSwitch
