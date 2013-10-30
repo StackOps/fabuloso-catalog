@@ -74,7 +74,7 @@ def configure(mysql_username='portal',
               mysql_port='3306',
               mysql_schema='portal',
               automation_license_token='vs0QiaN9TA6lIIe3uPSfiG3fs',
-              activity_license_token='vs0QiaN9TA6lIIe3uPSfiG3fs'):
+              activity_license_token='SUhIsoHOLNFjt6Drz7W26NrNs'):
     """Generate portal configuration. Execute on both servers"""
     sudo('echo stackops-portal stackops-portal/mysql-usr string %s | '
          'debconf-set-selections' % mysql_username)
