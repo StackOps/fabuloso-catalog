@@ -159,7 +159,7 @@ def configure_ovs_plugin_gre(ip_tunnel='127.0.0.1', tunnel_start='1',
                      section='OVS')
     utils.set_option(OVS_PLUGIN_CONF, 'tunnel_id_ranges',
                      '%s:%s' % (tunnel_start, tunnel_end), section='OVS')
-    utils.set_option(OVS_PLUGIN_CONF, 'local_ip', ip_tunnel)
+    utils.set_option(OVS_PLUGIN_CONF, 'local_ip', ip_tunnel, section='OVS')
     utils.set_option(OVS_PLUGIN_CONF, 'integration_bridge', 'br-int',
                      section='OVS')
     utils.set_option(OVS_PLUGIN_CONF, 'tunnel_bridge', 'br-tun', section='OVS')
@@ -258,7 +258,7 @@ def set_config_file(user='quantum', password='stackops', auth_host='127.0.0.1',
     utils.set_option(QUANTUM_CONF, 'rabbit_password', rabbit_password)
     utils.set_option(QUANTUM_CONF, 'rabbit_host', rabbit_host)
     utils.set_option(QUANTUM_CONF, 'notification_driver',
-                     'nova.openstack.common.notifier.rabbit_notifier')
+                     'quantum.openstack.common.notifier.rabbit_notifier')
     utils.set_option(QUANTUM_CONF, 'notification_topics',
                      'notifications,monitor')
     utils.set_option(QUANTUM_CONF, 'default_notification_level', 'INFO')

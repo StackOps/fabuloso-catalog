@@ -12,10 +12,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from fabric.api import sudo, puts, env, local, run, abort
-from cuisine import group_ensure, user_ensure, upstart_ensure, \
-    package_ensure
-from cuisine import re, os
+from fabric.api import *
+from cuisine import *
 
 try:
     from cStringIO import StringIO
@@ -26,63 +24,27 @@ OS_VERSIONS_SUPPORTED = ['3.2.0-26-generic #41-Ubuntu',
                          '3.2.0-26-generic #41-Ubuntu']
 
 
-def _configureInterfacesFile(bond_name, bond_slaves, bond_options):
+def network_stop():
+    with settings(warn_only=True):
+        sudo("nohup service networking stop")
+
+
+def network_start():
+    network_stop()
+    sudo("nohup service networking start")
+
+
+def _configureBondFile(bond_name, bond_slaves, bond_options):
     interfaces = sudo('cat "/etc/network/interfaces"')
-    puts(interfaces)
-
-    # Search for previous conf of any slave
-    reuse_iface = None
-    for slave in bond_slaves:
-        puts(slave)
-        if re.search(r'^[ \t]*iface[ \t]+%s' % (re.escape(slave)), interfaces,
-                     re.M):
-            reuse_iface = slave
-            break
-    puts('reuse_iface = %s' % reuse_iface)
-
-    if reuse_iface:
-        # Convert slave to bond
-        interfaces = re.sub(
-            r'(^[ \t]*iface[ \t]+)%s([ \t]+.*$)' % re.escape(reuse_iface),
-            r'\1%s\2\n\t%s\n\tbond-slaves none' % (
-                bond_name,
-                '\n\t'.join(('bond-'+' '.join(o.split('=', 1))
-                             for o in bond_options.split()))),
-            interfaces,
-            count=1,
-            flags=re.M | re.I
-        )
-        interfaces = re.sub(
-            (r'(^[ \t]*auto[ \t+](?:[^ \t]+[ \t]+)?)%s([ \t]?.*$)' %
-                re.escape(reuse_iface)),
-            r'\1%s\2' % bond_name,
-            interfaces,
-            flags=re.M | re.I
-        )
-    else:
-        # Create bond interface
-        interfaces = '\n'.join((
-            interfaces,
-            'auto %s' % bond_name,
-            'iface %s inet manual' % bond_name,
-            '\tbond-slaves none',
-            '\n'.join(('\tbond-'+' '.join(o.split('=', 1))
-                      for o in bond_options.split()))))
-
-    # Remove previous slave conf
-    for slave in bond_slaves:
-        iface_match = re.search(r'^[ \t]*iface[ \t]+%s(?:[ \t]|$)' %
-                                re.escape(slave), interfaces, re.M)
-        if not iface_match:
-            continue
-        iface_start = iface_match.start()
-        next_match = re.search(r'^[ \t]*(?:iface|mapping|auto|allow-|source)',
-                               interfaces[iface_match.end():], re.M)
-        if next_match:
-            iface_end = iface_start + next_match.end()
-        else:
-            iface_end = len(interfaces)
-        interfaces = interfaces[:iface_start] + interfaces[iface_end:]
+    # Create bond interface
+    interfaces = '\n'.join((
+        interfaces,
+        'auto %s' % bond_name,
+        'iface %s inet manual' % bond_name,
+        '\tbond-slaves none',
+        '\n'.join(('\tbond-'+' '.join(o.split('=', 1))
+                   for o in bond_options.split(',')))
+        ))
 
     def _clean_auto(line):
         parts = line.split()
@@ -97,19 +59,56 @@ def _configureInterfacesFile(bond_name, bond_slaves, bond_options):
 
     # Create slaves
     for slave in bond_slaves:
-        conf = """
-    auto %(slave)s
-    iface %(slave)s inet manual
-        bond-master %(bond)s
-        bond-primary %(slaves)s
-        up ifconfig $IFACE up
-    """
+        conf = '''
+auto %(slave)s
+iface %(slave)s inet manual
+    bond-master %(bond)s
+    bond-primary %(slaves)s
+'''
         conf = conf % {'bond': bond_name, 'slave': slave,
                        'slaves': ' '.join(bond_slaves)}
+        ifup = '''
+    up ifconfig $IFACE 0.0.0.0 up
+    up ip link set $IFACE promisc on
+    down ifconfig $IFACE down
+'''
         interfaces = ''.join((interfaces, conf))
+        interfaces += ifup
 
-    puts(interfaces)
-    sudo('echo "%s" > /etc/network/interfaces' % interfaces)
+    sudo("echo '%s' > /etc/network/interfaces" % interfaces)
+
+
+def configure_ifaces(ifaces):
+    ifc = ifaces.split()
+    interfaces = sudo('cat "/etc/network/interfaces"')
+
+    def _clean_auto(line):
+        parts = line.split()
+        if not parts or parts[0] != 'auto':
+            return line
+        parts = [p for p in parts[1:] if p not in ifc]
+        if not parts:
+            return ''
+        return 'auto %s\n' % ' '.join(parts)
+
+    interfaces = ''.join(map(_clean_auto, StringIO(interfaces)))
+
+    # Create ifaces
+    for slave in ifc:
+        conf = '''
+auto %(slave)s
+iface %(slave)s inet manual
+'''
+        conf = conf % {'slave': slave}
+        ifup = '''
+    up ifconfig $IFACE 0.0.0.0 up
+    up ip link set $IFACE promisc on
+    down ifconfig $IFACE down
+'''
+        interfaces = ''.join((interfaces, conf))
+        interfaces += ifup
+
+    sudo("echo '%s' > /etc/network/interfaces" % interfaces)
 
 
 def _bits2netmask(bits):
@@ -256,47 +255,58 @@ def add_repos():
     sudo('apt-get -y update')
 
 
-def configure_bond(bond_name=None, bond_slaves=None, bond_options='mode 1'):
+def configure_bond(bond_name=None, bond_slaves=None,
+                   bond_options='mode=balance-xor,miimon=100'):
     """Configure bond in the existing system"""
     package_ensure('ifenslave')
+    package_ensure('bridge-utils')
     slaves = bond_slaves.split()
-    _configureInterfacesFile(bond_name, slaves, bond_options)
-    _configureOnline(bond_name, slaves, bond_options)
+    _configureBondFile(bond_name, slaves, bond_options)
 
 
-def add_iface(iface=None, dhcp=False, gateway=None):
+def clean_interfaces_file():
+    """ Delete the /etc/network/interfaces file and configure
+    loopback interface only """
+    interfaces = sudo('cat "/etc/network/interfaces"')
+    # Write the entry for the new interface
+    interfaces = "\nauto lo"
+    interfaces += "\niface lo inet loopback"
+    sudo("echo '%s' > /etc/network/interfaces" % interfaces)
+
+
+def add_iface(iface=None, dhcp=False, static=True, address=None, netmask=None,
+              gateway=None, broadcast=None, network=None, dns_list=None,
+              domain=None, bridge=None):
     """Update /etc/network/interfaces with info for the current scheme"""
-    fp = ""
-    fp = """auto lo
-    iface lo inet loopback
+    interfaces = sudo('cat "/etc/network/interfaces"')
 
-"""
-    for i in iface_list():
-        iface = _get_ip_info(i)
-        puts(iface)
-        if iface:
-            # Write the entry for the new interface
-            fp += """auto %s""" % (iface['name'])
-            if dhcp:
-                fp += """
-    iface %s inet dhcp""" % (iface['name'])
-            else:
-                fp += """
-    iface %s inet static""" % (iface['name'])
-                if iface['ip']:
-                    fp += """
-    address %s""" % iface['ip']
-                if iface['netmask']:
-                    fp += """
-    netmask %s""" % iface['netmask']
-                if iface['broadcast']:
-                    fp += """
-    broadcast %s""" % iface['broadcast']
-                if gateway:
-                    fp += """
-    gateway %s""" % iface['gateway']
+    # Write the entry for the new interface
+    interfaces += "\nauto %s" % iface
+    if dhcp:
+        interfaces += "\niface %s inet dhcp" % iface
+    else:
+        if static:
+            interfaces += "\niface %s inet static" % iface
+        else:
+            interfaces += "\niface %s inet manual" % iface
 
-            puts(fp)
+    interfaces += "\n\taddress %s" % address
+    interfaces += "\n\tnetmask %s" % netmask
+    if gateway:
+        interfaces += "\n\tgateway %s" % gateway
+    interfaces += "\n\tbroadcast %s" % broadcast
+    interfaces += "\n\tnetwork %s" % network
+    if dns_list:
+        interfaces += "\n\tdns-nameservers %s" % dns_list
+    if domain:
+        interfaces += "\n\tdns-search %s" % domain
+    if bridge:
+        interfaces += "\n\tbridge_ports %s" % bridge
+        interfaces += "\n\tbridge_maxwait 0"
+        interfaces += "\n\tbridge_fd 0 "
+        interfaces += "\n\tbridge_stp off"
+    interfaces += "\n"
+    sudo("echo '%s' > /etc/network/interfaces" % interfaces)
 
 
 def cpu():
@@ -501,11 +511,20 @@ def show_partitions(disk=None):
     return out
 
 
-def parted(disk='/dev/sdb', start=0, end=100):
+def parted_mklabel(disk=None):
+    package_ensure('parted')
     sudo('parted -s %s mklabel msdos' % disk)
+
+
+def parted(disk=None, start=None, end=None):
+    package_ensure('parted')
     sudo('parted -s %s unit %% mkpart primary %s%% %s%%' % (disk, start, end))
 
 
 def execute_bootstrap():
     boot = "https://raw.github.com/StackOps/fabuloso/master/bootstrap/init.sh"
     run("wget -O - " + boot + " | sudo sh")
+
+
+def install():
+    pass

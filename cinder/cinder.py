@@ -75,7 +75,8 @@ def set_config_file(user='cinder', password='stackops', auth_host='127.0.0.1',
                     mysql_username='cinder',
                     mysql_password='stackops', mysql_host='127.0.0.1',
                     mysql_port='3306', mysql_schema='cinder', tenant='service',
-                    rabbit_password='guest', rabbit_host='localhost'):
+                    rabbit_password='guest', rabbit_host='localhost',
+                    iscsi_ip_address='127.0.0.1'):
 
     utils.set_option(CINDER_CONF, 'rootwrap_config',
                      '/etc/cinder/rootwrap.conf')
@@ -89,6 +90,7 @@ def set_config_file(user='cinder', password='stackops', auth_host='127.0.0.1',
                                               mysql_username))
     utils.set_option(CINDER_CONF, 'verbose', 'true')
     utils.set_option(CINDER_CONF, 'volume_group', 'cinder-volumes')
+    utils.set_option(CINDER_CONF, 'iscsi_ip_address', iscsi_ip_address)
     utils.set_option(CINDER_CONF, 'log_dir', '/var/log/cinder')
     utils.set_option(CINDER_CONF, 'notification_driver',
                      'cinder.openstack.common.notifier.rabbit_notifier')

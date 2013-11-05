@@ -20,10 +20,7 @@ Services:
     - name: install
       description: Prepares remote system for a OS with StackOps deployment
       methods:
-          - add_repos
-          - add_nova_user
-          - add_glance_user
-          - change_hostname
+          - install
     - name: parted
       description: make partition
       methods:

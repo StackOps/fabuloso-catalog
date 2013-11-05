@@ -7,10 +7,11 @@ Services:
       description: Install and configure component file
       methods:
           - install
-          - configure_network
+          - configure_forwarding
           - configure_ntp
           - configure_vhost_net
           - configure_libvirt
+          - configure_hugepages
           - set_config_file
           - configure_quantum
           - configure_ovs_plugin_vlan
@@ -23,6 +24,10 @@ Services:
       description: Configure nova-compute for NFS storage
       methods:
           - configure_nfs_storage
+    - name: configure_network
+      description: Configure network
+      methods:
+          - configure_network
     - name: start 
       description: Start Nova-compute service
       methods: 

@@ -186,7 +186,6 @@ def set_config_file(management_ip, user='nova', password='stackops',
 
     set_property('sql_connection', sql_connect_string(mysql_host,
                  mysql_password, mysql_port, mysql_schema, mysql_username))
-    set_property('scheduler_driver', 'nova.scheduler.simple.SimpleScheduler')
     set_property('auth_strategy', 'keystone')
     set_property('allow_admin_api', 'true')
     set_property('use_deprecated_auth', 'false')
@@ -242,10 +241,7 @@ def set_config_file(management_ip, user='nova', password='stackops',
     set_property('quota_key_pairs,', '100')
     set_property('quota_security_group_rules', '20')
     set_property('quota_security_groups', '10')
-    # NOVA-SCHEDULER configruration
-    set_property('max_cores', '16')
-    set_property('max_gigabytes', '2048')  # 2TB
-    set_property('max_networks', '1000')
+    set_property('cpu_allocation_ratio', '8.0')
     sudo('nova-manage db sync')
 
 

@@ -12,8 +12,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from fabric.api import settings, sudo, puts
-from cuisine import package_ensure, package_clean, dir_exists, dir_remove
+from fabric.api import *
+from cuisine import *
 
 import fabuloso.utils as utils
 
@@ -39,6 +39,8 @@ OVS_PLUGIN_CONF = '/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini'
 QUANTUM_CONF = '/etc/quantum/quantum.conf'
 
 NOVA_INSTANCES = '/var/lib/nova/instances'
+
+NOVA_VOLUMES = '/var/lib/nova/volumes'
 
 
 def stop():
@@ -127,6 +129,7 @@ def configure_ubuntu_packages():
     package_ensure('nova-compute-kvm')
     package_ensure('quantum-plugin-openvswitch-agent')
     package_ensure('open-iscsi')
+    package_ensure('autofs')
 
 
 def uninstall_ubuntu_packages():
@@ -140,6 +143,7 @@ def uninstall_ubuntu_packages():
     package_clean('nova-compute-kvm')
     package_clean('quantum-plugin-openvswitch-agent')
     package_clean('open-iscsi')
+    package_clean('autofs')
 
 
 def install(cluster=False):
@@ -151,10 +155,37 @@ def install(cluster=False):
     sudo('update-rc.d nova-compute defaults 98 02')
 
 
-def configure_network():
-    sudo("sed -i -r 's/^\s*#(net\.ipv4\.ip_forward=1.*)/\\1/' "
-         "/etc/sysctl.conf")
+def configure_forwarding():
+    sudo("sed -i -r 's/^\s*#(net\.ipv4\.ip_forward=1.*)"
+         "/\\1/' /etc/sysctl.conf")
     sudo("echo 1 > /proc/sys/net/ipv4/ip_forward")
+
+
+def configure_network(iface_bridge='eth1', br_postfix='bond-vm',
+                      bridge_name=None,
+                      bond_parameters='bond_mode=balance-slb '
+                                      'other_config:bond-detect-mode=miimon '
+                                      'other_config:bond-miimon-interval=100',
+                      network_restart=False):
+
+    openvswitch_start()
+    configure_forwarding()
+    with settings(warn_only=True):
+        sudo('ovs-vsctl del-br br-%s' % br_postfix)
+    sudo('ovs-vsctl add-br br-%s' % br_postfix)
+    bonding = len(iface_bridge.split()) > 1
+    if bonding:
+        if bridge_name is not None:
+            sudo('ovs-vsctl add-port br-%s %s -- set interface %s '
+                 'type=internal' % (br_postfix, bridge_name, bridge_name))
+        if network_restart:
+            sudo('ovs-vsctl add-bond br-%s %s %s %s; reboot' %
+                 (br_postfix, br_postfix, iface_bridge, bond_parameters))
+        else:
+            sudo('ovs-vsctl add-bond br-%s %s %s %s' %
+                 (br_postfix, br_postfix, iface_bridge, bond_parameters))
+    else:
+        sudo('ovs-vsctl add-port br-%s %s' % (br_postfix, iface_bridge))
 
 
 def configure_ntp(host='ntp.ubuntu.com'):
@@ -235,6 +266,11 @@ def set_config_file(management_ip='127.0.0.1', user='nova',
                      utils.sql_connect_string(mysql_host, mysql_password,
                                               mysql_port, mysql_schema,
                                               mysql_username))
+    utils.set_option(NOVA_COMPUTE_CONF, 'start_guests_on_host_boot', 'false')
+    utils.set_option(NOVA_COMPUTE_CONF, 'resume_guests_state_on_host_boot',
+                     'true')
+    utils.set_option(NOVA_COMPUTE_CONF, 'allow_same_net_traffic', 'True')
+    utils.set_option(NOVA_COMPUTE_CONF, 'allow_resize_to_same_host', 'True')
 
     utils.set_option(NOVA_COMPUTE_CONF, 'verbose', 'true')
     utils.set_option(NOVA_COMPUTE_CONF, 'auth_strategy', 'keystone')
@@ -314,6 +350,8 @@ def set_config_file(management_ip='127.0.0.1', user='nova',
     utils.set_option(NOVA_COMPUTE_CONF, 'allow_same_net_traffic',
                      'True')
 
+    utils.set_option(NOVA_COMPUTE_CONF, 'nfs_mount_point_base', NOVA_VOLUMES)
+
     start()
 
 
@@ -364,7 +402,7 @@ def configure_ovs_plugin_gre(mysql_username='quantum',
     quantum_plugin_openvswitch_agent_start()
 
 
-def configure_ovs_plugin_vlan(iface_bridge='eth1', br_postfix='eth1',
+def configure_ovs_plugin_vlan(br_postfix='bond-vm',
                               vlan_start='2',
                               vlan_end='4094',
                               mysql_quantum_username='quantum',
@@ -383,19 +421,14 @@ def configure_ovs_plugin_vlan(iface_bridge='eth1', br_postfix='eth1',
                      'vlan', section='OVS')
     utils.set_option(OVS_PLUGIN_CONF, 'network_vlan_ranges', 'physnet1:%s:%s'
                      % (vlan_start, vlan_end), section='OVS')
-    utils.set_option(OVS_PLUGIN_CONF, 'bridge_mappings', 'physnet1:br-%s'
-                     % iface_bridge, section='OVS')
+    utils.set_option(OVS_PLUGIN_CONF, 'bridge_mappings',
+                     'physnet1:br-%s' % br_postfix, section='OVS')
     utils.set_option(OVS_PLUGIN_CONF, 'root_helper',
                      'sudo /usr/bin/quantum-rootwrap '
                      '/etc/quantum/rootwrap.conf', section='AGENT')
     with settings(warn_only=True):
         sudo('ovs-vsctl del-br br-int')
     sudo('ovs-vsctl add-br br-int')
-    with settings(warn_only=True):
-        sudo('ovs-vsctl del-br br-%s' % br_postfix)
-    sudo('ovs-vsctl add-br br-%s' % br_postfix)
-    sudo('ovs-vsctl add-port br-%s %s' % (br_postfix, iface_bridge))
-    openvswitch_start()
     quantum_plugin_openvswitch_agent_start()
 
 
@@ -404,7 +437,7 @@ def get_memory_available():
                            "sed 's/[^0-9\.]//g'"))
 
 
-def configure_hugepages(is_enabled=True, percentage='70'):
+def configure_hugepages(is_hugepages_enabled=True, percentage='70'):
     ''' enable/disable huge pages in the system'''
     sudo("sed -i '/hugepages/d' /etc/apparmor.d/abstractions/libvirt-qemu")
     sudo('sed -i /hugetlbfs/d /etc/fstab')
@@ -413,7 +446,7 @@ def configure_hugepages(is_enabled=True, percentage='70'):
     with settings(warn_only=True):
         sudo('rm etc/sysctl.d/60-hugepages.conf')
         sudo('umount /dev/hugepages')
-    if is_enabled:
+    if is_hugepages_enabled:
         pages = int(0.01 * int(percentage) *
                     int(get_memory_available() / PAGE_SIZE)) + BONUS_PAGES
         sudo("echo '  owner /dev/hugepages/libvirt/qemu/* rw,' >> "
@@ -437,17 +470,32 @@ def configure_nfs_storage(nfs_server, delete_content=False,
                           set_nova_owner=True,
                           nfs_server_mount_point_params='defaults'):
     package_ensure('nfs-common')
+    package_ensure('autofs')
     if delete_content:
         sudo('rm -fr %s' % NOVA_INSTANCES)
+        sudo('rm -fr %s' % NOVA_VOLUMES)
     stop()
-    sudo('mkdir -p %s' % NOVA_INSTANCES)
-    mpoint = '%s %s nfs %s 0 0' % (nfs_server, NOVA_INSTANCES,
-                                   nfs_server_mount_point_params)
-    sudo('sed -i "#%s#d" /etc/fstab' % NOVA_INSTANCES)
-    sudo('echo "\n%s" >> /etc/fstab' % mpoint)
-    sudo('mount -a')
+    nova_instance_exists = file_exists(NOVA_INSTANCES)
+    nova_volumes_exists = file_exists(NOVA_VOLUMES)
+    if not nova_instance_exists:
+        sudo('mkdir -p %s' % NOVA_INSTANCES)
+    if not nova_volumes_exists:
+        sudo('mkdir -p %s' % NOVA_VOLUMES)
+#    mpoint = '%s %s nfs _netdev,nobootwait,bg,vers=3,
+# %s 0 0' % (endpoint, NOVA_INSTANCES, endpoint_params)
+    mpoint = '%s  -fstype=nfs,vers=3,%s   %s' % \
+             (NOVA_INSTANCES, nfs_server_mount_point_params, nfs_server)
+    sudo('''echo "/-    /etc/auto.nfs" > /etc/auto.master''')
+    sudo('''echo "%s" > /etc/auto.nfs''' % mpoint)
+#    sudo('sed -i "#%s#d" /etc/fstab' % NOVA_INSTANCES)
+#    sudo('echo "\n%s" >> /etc/fstab' % mpoint)
+#    sudo('mount -a')
+    sudo('service autofs restart')
     if set_nova_owner:
-        sudo('chown nova:nova -R %s' % NOVA_INSTANCES)
+        if not nova_instance_exists:
+            sudo('chown nova:nova -R %s' % NOVA_INSTANCES)
+        if not nova_volumes_exists:
+            sudo('chown nova:nova -R %s' % NOVA_VOLUMES)
     start()
 
 

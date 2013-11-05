@@ -12,8 +12,8 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.from fabric.api import *
-from fabric.api import sudo, settings
-from cuisine import package_ensure
+from fabric.api import *
+from cuisine import *
 from fabuloso import fabuloso
 
 
@@ -49,3 +49,9 @@ def validate_rabbitmq(service_type, host, rport=None, ruser=None,
     fab = fabuloso.Fabuloso()
     fab.send_rabbitMQ(service_type, host, rport, ruser, rpassword,
                       virtual_host)
+
+
+def clean_folder():
+    """Deletes the backend folder"""
+    run("rm -fR /var/lib/rabbitmq/*")
+    run("rm -fR /var/lib/rabbitmq/.erlang.cookie")

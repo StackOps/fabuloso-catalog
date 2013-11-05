@@ -157,11 +157,11 @@ def configure_users(endpoint="'http://localhost:35357/v2.0'",
     activity_admin_role = _create_role(endpoint, admin_token,
                                        'ROLE_ACTIVITY_ADMIN')
     activity_user_role = _create_role(endpoint, admin_token,
-                                      'ROLE_ACTIVITY_USER')
+                                      'ROLE_ACTIVITY')
     chargeback_admin_role = _create_role(endpoint, admin_token,
                                          'ROLE_CHARGEBACK_ADMIN')
     chargeback_user_role = _create_role(endpoint, admin_token,
-                                        'ROLE_CHARGEBACK_USER')
+                                        'ROLE_CHARGEBACK')
     accounting_user_role = _create_role(endpoint, admin_token,
                                         'ROLE_ACCOUNTING')
     automation_user_role = _create_role(endpoint, admin_token,
