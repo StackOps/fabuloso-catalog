@@ -19,6 +19,10 @@ Services:
       description: Configure the openvswitch
       methods:
           - configure_ovs_plugin_vlan
+    - name: configure_nfs_storage
+      description: Configure nova-compute for NFS storage
+      methods:
+          - configure_nfs_storage
     - name: start 
       description: Start Nova-compute service
       methods: 

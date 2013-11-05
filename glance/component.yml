@@ -12,6 +12,13 @@ Services:
       description: Downloads an image from amazon and publishes it into glance
       methods:
           - publish_ttylinux
+    - name: configure_nfs_storage
+      description: Configure glance for NFS storage
+      methods:
+          - configure_nfs_storage
+    - name: configure_local_storage
+      description: Configure glance for local storage
+      methods:
           - configure_local_storage
     - name: validate
       description: Validates glance to operate with it

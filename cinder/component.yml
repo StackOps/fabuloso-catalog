@@ -17,6 +17,10 @@ Services:
       description: Create a volume with cinder
       methods:
           - create_volume
+    - name: configure_nfs_storage
+      description: Configure cinder driver for NFS storage
+      methods:
+          - configure_nfs_storage
     - name: validate
       description: Validates cinder to operate with it
       methods:

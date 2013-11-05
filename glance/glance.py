@@ -111,14 +111,16 @@ def configure_local_storage(delete_content=False, set_glance_owner=True):
     start()
 
 
-def configure_nfs_storage(endpoint, delete_content=False,
-                          set_glance_owner=True, endpoint_params='defaults'):
+def configure_nfs_storage(nfs_server, delete_content=False,
+                          set_glance_owner=True,
+                          nfs_server_mount_point_params='defaults'):
     package_ensure('nfs-common')
     if delete_content:
         sudo('rm -fr %s' % GLANCE_IMAGES)
     stop()
     sudo('mkdir -p %s' % GLANCE_IMAGES)
-    mpoint = '%s %s nfs %s 0 0' % (endpoint, GLANCE_IMAGES, endpoint_params)
+    mpoint = '%s %s nfs %s 0 0' % (nfs_server, GLANCE_IMAGES,
+                                   nfs_server_mount_point_params)
     sudo('sed -i "#%s#d" /etc/fstab' % GLANCE_IMAGES)
     sudo('echo "\n%s" >> /etc/fstab' % mpoint)
     sudo('mount -a')

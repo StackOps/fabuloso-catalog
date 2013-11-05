@@ -433,14 +433,16 @@ def configure_hugepages(is_enabled=True, percentage='70'):
              "/usr/share/pyshared/nova/virt/libvirt.xml.template")
 
 
-def configure_nfs_storage(endpoint, delete_content=False, set_nova_owner=True,
-                          endpoint_params='defaults'):
+def configure_nfs_storage(nfs_server, delete_content=False,
+                          set_nova_owner=True,
+                          nfs_server_mount_point_params='defaults'):
     package_ensure('nfs-common')
     if delete_content:
         sudo('rm -fr %s' % NOVA_INSTANCES)
     stop()
     sudo('mkdir -p %s' % NOVA_INSTANCES)
-    mpoint = '%s %s nfs %s 0 0' % (endpoint, NOVA_INSTANCES, endpoint_params)
+    mpoint = '%s %s nfs %s 0 0' % (nfs_server, NOVA_INSTANCES,
+                                   nfs_server_mount_point_params)
     sudo('sed -i "#%s#d" /etc/fstab' % NOVA_INSTANCES)
     sudo('echo "\n%s" >> /etc/fstab' % mpoint)
     sudo('mount -a')
