@@ -1,0 +1,9 @@
+name: memcached
+file: memcached.py
+description: Memcached
+
+Services:
+    - name: install
+      description: Installs a memcached node
+      methods:
+        - install_packages
