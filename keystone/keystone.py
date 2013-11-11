@@ -144,7 +144,7 @@ def configure_users(endpoint="'http://localhost:35357/v2.0'",
                     admin_token="password", admin_pass="stackops"):
     """Configure basic service users/roles"""
     admin_tenant = _create_tenant(endpoint, admin_token, 'admin')
-    head_tenant = _create_tenant(endpoint, admin_token, 'head')
+    #head_tenant = _create_tenant(endpoint, admin_token, 'head')
     _create_tenant(endpoint, admin_token, 'service')
     admin_role = _create_role(endpoint, admin_token, 'admin')
     member_role = _create_role(endpoint, admin_token, 'Member')
@@ -164,20 +164,20 @@ def configure_users(endpoint="'http://localhost:35357/v2.0'",
                                         'ROLE_CHARGEBACK')
     accounting_user_role = _create_role(endpoint, admin_token,
                                         'ROLE_ACCOUNTING')
-    automation_user_role = _create_role(endpoint, admin_token,
-                                        'ROLE_HEAD_ADMIN')
+    #automation_user_role = _create_role(endpoint, admin_token,
+    #                                    'ROLE_HEAD_ADMIN')
     admin_user = _create_user(endpoint, admin_token, 'admin', admin_pass,
                               admin_tenant)
-    head_user = _create_user(endpoint, admin_token, 'head', admin_pass,
-                             head_tenant)
+    #head_user = _create_user(endpoint, admin_token, 'head', admin_pass,
+    #                         head_tenant)
     _link_user_role(endpoint, admin_token, admin_user, keystone_admin_role,
                     admin_tenant)
-    _link_user_role(endpoint, admin_token, head_user, keystone_admin_role,
-                    head_tenant)
+    #_link_user_role(endpoint, admin_token, head_user, keystone_admin_role,
+    #                head_tenant)
     _link_user_role(endpoint, admin_token, admin_user,
                     keystone_service_admin_role, admin_tenant)
-    _link_user_role(endpoint, admin_token, head_user,
-                    keystone_service_admin_role, head_tenant)
+    #_link_user_role(endpoint, admin_token, head_user,
+    #                keystone_service_admin_role, head_tenant)
     _link_user_role(endpoint, admin_token, admin_user, admin_role,
                     admin_tenant)
     _link_user_role(endpoint, admin_token, admin_user, member_role,
@@ -186,10 +186,10 @@ def configure_users(endpoint="'http://localhost:35357/v2.0'",
                     admin_tenant)
     _link_user_role(endpoint, admin_token, admin_user, portal_user_role,
                     admin_tenant)
-    _link_user_role(endpoint, admin_token, head_user, portal_admin_role,
-                    head_tenant)
-    _link_user_role(endpoint, admin_token, head_user, portal_user_role,
-                    head_tenant)
+    #_link_user_role(endpoint, admin_token, head_user, portal_admin_role,
+    #                head_tenant)
+    #_link_user_role(endpoint, admin_token, head_user, portal_user_role,
+    #                head_tenant)
     _link_user_role(endpoint, admin_token, admin_user, activity_admin_role,
                     admin_tenant)
     _link_user_role(endpoint, admin_token, admin_user, activity_user_role,
@@ -200,8 +200,8 @@ def configure_users(endpoint="'http://localhost:35357/v2.0'",
                     admin_tenant)
     _link_user_role(endpoint, admin_token, admin_user, accounting_user_role,
                     admin_tenant)
-    _link_user_role(endpoint, admin_token, admin_user, automation_user_role,
-                    head_tenant)
+    #_link_user_role(endpoint, admin_token, admin_user, automation_user_role,
+    #                head_tenant)
 
 
 def _create_service(admin_token, service_name, service_type, description,
@@ -367,6 +367,26 @@ def define_accounting_service(admin_token='password', region='RegionOne',
                     accounting_internal_url, accounting_admin_url)
     _create_user_for_service(endpoint, accounting_user, admin_token,
                              accounting_password, 'service')
+
+
+def define_chargeback_service(admin_token='password', region='RegionOne',
+                              endpoint="'http://localhost:35357/v2.0'",
+                              chargeback_public_host='localhost',
+                              chargeback_internal_host='localhost',
+                              chargeback_user='chargeback',
+                              chargeback_password='stackops'):
+    chargeback_public_url = 'http://' + chargeback_public_host + \
+                            '/activity'
+    chargeback_internal_url = 'http://' + chargeback_internal_host + \
+                              ':8080/activity'
+    chargeback_admin_url = 'http://' + chargeback_internal_host + \
+                           ':8080/activity'
+    _create_service(admin_token, 'chargeback', 'chargeback',
+                    'StackOps chargeback '
+                    'service', region, endpoint, chargeback_public_url,
+                    chargeback_internal_url, chargeback_admin_url)
+    _create_user_for_service(endpoint, chargeback_user, admin_token,
+                             chargeback_password, 'service')
 
 
 def define_automation_service(admin_token='password', region='RegionOne',

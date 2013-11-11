@@ -106,8 +106,9 @@ def configure_local_storage(delete_content=False, set_glance_owner=True):
     stop()
     sudo('sed -i "#%s#d" /etc/fstab' % GLANCE_IMAGES)
     sudo('mkdir -p %s' % GLANCE_IMAGES)
-    if set_glance_owner:
-        sudo('chown glance:glance -R %s' % GLANCE_IMAGES)
+    with settings(warn_only=True):
+        if set_glance_owner:
+            sudo('chown glance:glance -R %s' % GLANCE_IMAGES)
     start()
 
 

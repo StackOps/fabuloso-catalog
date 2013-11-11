@@ -20,9 +20,26 @@ Services:
     - name: configure_l3_and_dhcp
       description: Configures the router agent
       methods:
+          -
           - configure_l3_agent
           - configure_dhcp_agent
     - name: start
       description: Starts the plugin
       methods: 
           - start
+    - name: configure_external_network
+      description: Configure the default external network
+      methods:
+          - configure_external_network
+    - name: configure_default_private_network
+      description: Configure the default private network
+      methods:
+          - configure_default_private_network
+    - name: configure_metadata
+      description: Configure metadata for private network
+      methods:
+          - configure_metadata
+    - name: configure_iptables
+      description: Configure iptables for public management
+      methods:
+          - configure_iptables

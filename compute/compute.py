@@ -296,11 +296,6 @@ def set_config_file(management_ip='127.0.0.1', user='nova',
                      'nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver')
     utils.set_option(NOVA_COMPUTE_CONF, 'libvirt_use_virtio_for_bridges',
                      'true')
-    utils.set_option(NOVA_COMPUTE_CONF, 'start_guests_on_host_boot',
-                     'false')
-    utils.set_option(NOVA_COMPUTE_CONF, 'resume_guests_state_on_host_boot',
-                     'false')
-
     utils.set_option(NOVA_COMPUTE_CONF, 'quantum_auth_strategy',
                      'keystone')
     utils.set_option(NOVA_COMPUTE_CONF, 'quantum_admin_username',
@@ -491,11 +486,12 @@ def configure_nfs_storage(nfs_server, delete_content=False,
 #    sudo('echo "\n%s" >> /etc/fstab' % mpoint)
 #    sudo('mount -a')
     sudo('service autofs restart')
-    if set_nova_owner:
-        if not nova_instance_exists:
-            sudo('chown nova:nova -R %s' % NOVA_INSTANCES)
-        if not nova_volumes_exists:
-            sudo('chown nova:nova -R %s' % NOVA_VOLUMES)
+    with settings(warn_only=True):
+        if set_nova_owner:
+            if not nova_instance_exists:
+                sudo('chown nova:nova -R %s' % NOVA_INSTANCES)
+            if not nova_volumes_exists:
+                sudo('chown nova:nova -R %s' % NOVA_VOLUMES)
     start()
 
 

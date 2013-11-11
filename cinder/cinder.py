@@ -120,7 +120,8 @@ def configure_nfs_storage(nfs_shares=None, nfs_sparsed_volumes=True,
     shared_nfs_list = nfs_shares.split(',')
     for nfs_share in shared_nfs_list:
         sudo("echo \"%s\" >> %s" % (nfs_share, nfs_shares_config))
-    sudo("chown cinder:cinder %s" % (nfs_shares_config))
+    with settings(warn_only=True):
+        sudo("chown cinder:cinder %s" % (nfs_shares_config))
     utils.set_option(CINDER_CONF, 'volume_driver',
                      'cinder.volume.nfs.NfsDriver')
     utils.set_option(CINDER_CONF, 'nfs_shares_config', nfs_shares_config)
