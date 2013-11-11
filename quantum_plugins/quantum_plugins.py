@@ -219,8 +219,8 @@ def configure_l3_agent(user='quantum', password='stackops',
                        admin_password='password',
                        ):
     auth_url = 'http://' + auth_host + ':35357/v2.0'
-    router_id = get_router_id('provider-router', admin_user, admin_tenant_name,
-                              admin_password, auth_url)
+    #router_id = get_router_id('provider-router', admin_user, admin_tenant_name,
+    #                          admin_password, auth_url)
     utils.set_option(L3_AGENT_CONF, 'debug', 'True')
     utils.set_option(L3_AGENT_CONF, 'interface_driver',
                      'quantum.agent.linux.interface.OVSInterfaceDriver')
@@ -233,7 +233,7 @@ def configure_l3_agent(user='quantum', password='stackops',
                      'sudo quantum-rootwrap /etc/quantum/rootwrap.conf')
     utils.set_option(L3_AGENT_CONF, 'metadata_ip', metadata_ip)
     utils.set_option(L3_AGENT_CONF, 'use_namespaces', 'False')
-    utils.set_option(L3_AGENT_CONF, 'router_id', router_id)
+    #utils.set_option(L3_AGENT_CONF, 'router_id', router_id)
     utils.set_option(L3_AGENT_CONF, 'handle_internal_only_routers', 'True')
     utils.set_option(L3_AGENT_CONF, 'polling_interval', '3')
 
