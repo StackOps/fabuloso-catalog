@@ -125,8 +125,9 @@ def configure_nfs_storage(nfs_server, delete_content=False,
     sudo('sed -i "#%s#d" /etc/fstab' % GLANCE_IMAGES)
     sudo('echo "\n%s" >> /etc/fstab' % mpoint)
     sudo('mount -a')
-    if set_glance_owner:
-        sudo('chown glance:glance -R %s' % GLANCE_IMAGES)
+    with settings(warn_only=True):
+        if set_glance_owner:
+            sudo('chown glance:glance -R %s' % GLANCE_IMAGES)
     start()
 
 
