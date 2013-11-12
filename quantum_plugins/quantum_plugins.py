@@ -219,7 +219,8 @@ def configure_l3_agent(user='quantum', password='stackops',
                        admin_password='password',
                        ):
     auth_url = 'http://' + auth_host + ':35357/v2.0'
-    #router_id = get_router_id('provider-router', admin_user, admin_tenant_name,
+    #router_id = get_router_id('provider-router', admin_user,
+    # admin_tenant_name,
     #                          admin_password, auth_url)
     utils.set_option(L3_AGENT_CONF, 'debug', 'True')
     utils.set_option(L3_AGENT_CONF, 'interface_driver',
