@@ -20,7 +20,6 @@ Services:
     - name: configure_l3_and_dhcp
       description: Configures the router agent
       methods:
-          -
           - configure_l3_agent
           - configure_dhcp_agent
     - name: start
