@@ -20,4 +20,4 @@ Services:
     - name: uninstall
       description: Uninstall Apache HTTP Server
       methods:
-          - uninstall
+          - uninstall_ubuntu_packages
