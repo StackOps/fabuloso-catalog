@@ -226,7 +226,7 @@ def define_keystone_service(admin_token='password', region='RegionOne',
                             ks_admin_host='localhost',
                             ks_user='keystone',
                             ks_password='stackops'):
-    ks_public_url = 'http://' + ks_public_host + ':35357/keystone/v2.0'
+    ks_public_url = 'http://' + ks_public_host + '/keystone/v2.0'
     ks_internal_url = 'http://' + ks_internal_host + ':5000/v2.0'
     ks_admin_url = 'http://' + ks_admin_host + ':35357/v2.0'
 
