@@ -1,0 +1,15 @@
+Source: fabuloso-catalog-folsom
+Section: python
+Priority: optional
+Maintainer: StackOps Developers <developers@stackops.com>
+Uploaders: Diego Parrilla <diego.parrilla@stackops.com>
+Build-Depends: debhelper (>= 7.0.50),
+ python-setuptools
+Standards-Version: 3.9.3
+Homepage: http://www.stackops.com
+
+Package: python-fabuloso-catalog-folsom
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends},
+ python-fabuloso
+Description: OopenStack folsom Fabuloso deployment scripts

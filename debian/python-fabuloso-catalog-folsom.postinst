@@ -1,0 +1,6 @@
+#! /bin/sh
+#set -x
+. /usr/share/debconf/confmodule
+
+python -c 'import sys, fabuloso; fabuloso.config.ConfigureEditor().add_repo("folsom","unknown"); '
+

@@ -1,0 +1,15 @@
+apache etc/fabuloso/repos/folsom/
+chargeback etc/fabuloso/repos/folsom/
+cinder etc/fabuloso/repos/folsom/
+compute etc/fabuloso/repos/folsom/
+glance etc/fabuloso/repos/folsom/
+keystone etc/fabuloso/repos/folsom/
+mysql etc/fabuloso/repos/folsom/
+nova etc/fabuloso/repos/folsom/
+os etc/fabuloso/repos/folsom/
+portal etc/fabuloso/repos/folsom/
+quantum etc/fabuloso/repos/folsom/
+quantum_plugins etc/fabuloso/repos/folsom/
+rabbitmq etc/fabuloso/repos/folsom/
+storage etc/fabuloso/repos/folsom/
+swift etc/fabuloso/repos/folsom/
