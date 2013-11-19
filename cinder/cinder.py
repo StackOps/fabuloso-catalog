@@ -114,10 +114,10 @@ def set_config_file(user='cinder', password='stackops', auth_host='127.0.0.1',
     sudo('cinder-manage db sync')
 
 
-def configure_nfs_storage(nfs_shares=None, nfs_sparsed_volumes=True,
+def configure_nfs_storage(nfs_server=None, nfs_sparsed_volumes=True,
                           nfs_shares_config="/var/lib/cinder/nfsshare.conf"):
     ''' Write the list with nfs storage list '''
-    shared_nfs_list = nfs_shares.split(',')
+    shared_nfs_list = nfs_server.split(',')
     for nfs_share in shared_nfs_list:
         sudo("echo \"%s\" >> %s" % (nfs_share, nfs_shares_config))
     with settings(warn_only=True):

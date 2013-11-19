@@ -124,7 +124,7 @@ def configure_network():
     sudo("echo 1 > /proc/sys/net/ipv4/ip_forward")
 
 
-def install(cluster=False, iface_ex=None):
+def install(cluster=False, iface_ex="eth2"):
     """Generate quantum configuration. Execute on both servers"""
     if iface_ex is None:
         puts("{'error':'You need to pass the physical interface as argument "

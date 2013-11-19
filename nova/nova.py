@@ -184,6 +184,9 @@ def set_config_file(management_ip, user='nova', password='stackops',
         puts("{error:'Management IP of the node needed as argument'}")
         exit(0)
 
+    set_property('scheduler_default_filters',
+                 'AggregateInstanceExtraSpecsFilter,AvailabilityZoneFilter,'
+                 'RamFilter,ComputeFilter')
     set_property('sql_connection', sql_connect_string(mysql_host,
                  mysql_password, mysql_port, mysql_schema, mysql_username))
     set_property('auth_strategy', 'keystone')

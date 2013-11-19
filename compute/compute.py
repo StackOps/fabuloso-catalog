@@ -188,8 +188,8 @@ def configure_network(iface_bridge='eth1', br_postfix='bond-vm',
         sudo('ovs-vsctl add-port br-%s %s' % (br_postfix, iface_bridge))
 
 
-def configure_ntp(host='ntp.ubuntu.com'):
-    sudo('echo "server %s" > /etc/ntp.conf' % host)
+def configure_ntp(ntp_host='ntp.ubuntu.com'):
+    sudo('echo "server %s" > /etc/ntp.conf' % ntp_host)
 
 
 def configure_vhost_net():
