@@ -37,9 +37,10 @@ def configure_ubuntu_packages():
     package_ensure('nfs-kernel-server')
 
 
-def install(master_datastore):
-    """Generate Internal NFS Server for storage
-    (volumes, instances and images) configuration. """
+def install(master_datastore='/exports/stackops'):
+    """Creates an Internal NFS Server configuration
+    for storage (volumes, instances and images)
+    as default and as first candidate to operate"""
     configure_ubuntu_packages()
     sudo('mkdir -p %s/instances' % master_datastore)
     sudo('mkdir -p %s/volumes' % master_datastore)
@@ -50,8 +51,11 @@ def install(master_datastore):
     restart()
 
 
-def validate(master_endpoint, master_datastore, master_storage_type,
-             master_mount_parameters, master_hostname=None):
+def validate(master_endpoint='localhost',
+             master_datastore='/exports/stackops',
+             master_storage_type='NFS',
+             master_mount_parameters='defaults',
+             master_hostname=None):
     print sudo('showmount -e %s' % master_endpoint)
     print '\n'
 
@@ -84,17 +88,43 @@ def validate(master_endpoint, master_datastore, master_storage_type,
     sudo('cd /mnt/ && rm -r nfs_images/')
 
 
-def storage_instances(instances_endpoint, instances_datastore,
-                      instances_storage_type, instances_mount_parameters,
+def storage_instances(instances_endpoint='localhost',
+                      instances_datastore='/exports/stackops/instances',
+                      instances_storage_type='NFS',
+                      instances_mount_parameters='defaults',
                       instances_hostname=None):
+    """Here are defined just a set of properties to be used at the moment to
+    do an 'attach' or 'detach' to a zone from the pool's datastore, and use
+    them for instances. This properties are the match between the isolated
+    datastores functionality and a zone.
+    The default definition of these properties are given at the moment to do
+    the install() method of this component showed above"""
     pass
 
 
-def storage_volumes(volumes_endpoint, volumes_datastore, volumes_storage_type,
-                    volumes_mount_parameters, volumes_hostname=None):
+def storage_volumes(volumes_endpoint='localhost',
+                    volumes_datastore='/exports/stackops/volumes',
+                    volumes_storage_type='NFS',
+                    volumes_mount_parameters='defaults',
+                    volumes_hostname=None):
+    """Here are defined just a set of properties to be used at the moment to
+    do an 'attach' or 'detach' to a zone from the pool's datastore, and use
+    them for volumes. This properties are the match between the isolated
+    datastores functionality and a zone.
+    The default definition of these properties are given at the moment to do
+    the install() method of this component showed above"""
     pass
 
 
-def storage_images(images_endpoint, images_datastore, images_storage_type,
-                   images_mount_parameters, images_hostname=None):
+def storage_images(images_endpoint='localhost',
+                   images_datastore='/exports/stackops/images',
+                   images_storage_type='NFS',
+                   images_mount_parameters='defaults',
+                   images_hostname=None):
+    """Here are defined just a set of properties to be used at the moment to
+    do an 'attach' or 'detach' to a zone from the pool's datastore, and use
+    them for images. This properties are the match between the isolated
+    datastores functionality and a zone.
+    The default definition of these properties are given at the moment to do
+    the install() method of this component showed above"""
     pass
