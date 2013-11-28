@@ -376,11 +376,11 @@ def define_chargeback_service(admin_token='password', region='RegionOne',
                               chargeback_user='chargeback',
                               chargeback_password='stackops'):
     chargeback_public_url = 'http://' + chargeback_public_host + \
-                            '/activity'
+                            '/chargeback'
     chargeback_internal_url = 'http://' + chargeback_internal_host + \
-                              ':8080/activity'
+                              ':8080/chargeback'
     chargeback_admin_url = 'http://' + chargeback_internal_host + \
-                           ':8080/activity'
+                           ':8080/chargeback'
     _create_service(admin_token, 'chargeback', 'chargeback',
                     'StackOps chargeback '
                     'service', region, endpoint, chargeback_public_url,
